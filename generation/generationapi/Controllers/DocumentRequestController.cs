@@ -105,14 +105,6 @@ public class DocumentRequestController : Controller
 
             string val = token.ToString();
 
-            DateOnly date;
-
-            if (DateOnly.TryParse(val, out date))
-            {
-                // this is a date, need to check formatting.
-                // ex: <@ [key.date] -f YYYY-mm-dd >>
-                // TODO
-            }
 
             if (val.Contains("pronoun"))
             {

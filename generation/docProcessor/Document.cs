@@ -127,6 +127,7 @@ public class Document: IDisposable
                 {
                     
                     string key = match.Groups[2].Value;
+                    string replacement = getReplacementString!(key);
                     string[] keys = key.Split(' ');
                     string switches = match.Groups[3].Value;
 
@@ -154,19 +155,31 @@ public class Document: IDisposable
                     else
                     { */
                     
+                    DateOnly date;
+
+                    // this is a date, need to check formatting.
+                    // ex: << [key.date] :f YYYY-mm-dd >>
+                    if (DateOnly.TryParse(replacement, out date) && switches.Contains(":f"))
+                    {
+                        List<string> switchStrings = switches.Split(' ').ToList();
+                        int index = switchStrings.FindIndex(s => s.Contains(":f")) + 1;
+                        string dateFormat = switchStrings[index].Replace('-', ' ');
+                        text.Text = text.Text.Replace(match.Value, date.ToString(dateFormat));
+                    }
+                    
                     if (switches.Contains(":upper"))
                     {
                         text.Text = text.Text.Replace(match.Value,
-                            Utility.ToUpperFirstChar(getReplacementString!(key)));
+                            Utility.ToUpperFirstChar(replacement));
                     }
                     else if (switches.Contains(":lower"))
                     {
                         text.Text = text.Text.Replace(match.Value,
-                            Utility.ToLowerFirstChar(getReplacementString!(key)));
+                            Utility.ToLowerFirstChar(replacement));
                     }
                     else
                     {
-                        text.Text = text.Text.Replace(match.Value, getReplacementString!(key));
+                        text.Text = text.Text.Replace(match.Value, replacement);
                     }
 
                 }
