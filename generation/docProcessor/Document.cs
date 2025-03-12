@@ -173,8 +173,14 @@ public class Document: IDisposable
                     // p0, p1, p2, p3 are valid switches
                     if (key.Contains("gender"))
                     {
-                        //TODO handle the case when there is more than one switch
-                        switch (switches.Trim().Replace(":", ""))
+                        
+                        //temp, isolates the p# switches
+                        switches = Regex.Replace(switches, @"\s+", "");
+                        if(switches.Length > 0 && switches[0] == ':') {switches = switches.Substring(1);}
+                        List<string> allSwitches = switches.Trim().Split(':').ToList(); 
+                        allSwitches.RemoveAll(s => s.Length < 1);
+                        
+                        switch (allSwitches.FindLast(s => s[0] == 'p'))
                         {
                            case "p0":
                                if (replacement == "Male") { replacement = "male"; }
@@ -195,8 +201,6 @@ public class Document: IDisposable
                                if (replacement == "Male") { replacement = "himself"; }
                                else if (replacement == "Female") { replacement = "herself"; }
                                else { replacement = "themself"; }
-                               break;
-                           default:
                                break;
                         }
                     }
