@@ -130,10 +130,10 @@ public class Document: IDisposable
                     string[] keys = key.Split(' ');
                     string switches = match.Groups[3].Value;
 
+                    /*
                     // <<if [a == b]>>
                     if (match.Groups[1].Value.Contains("if") && keys.Length == 3)
                     {
-                        /*
                         switch (keys[1])
                         {
                             case "==":
@@ -149,22 +149,24 @@ public class Document: IDisposable
                                 }
                                 break;
                         } 
-                        */
 
-                    } 
+                    }
+                    else
+                    { */
+                    
+                    if (switches.Contains(":upper"))
+                    {
+                        text.Text = text.Text.Replace(match.Value,
+                            Utility.ToUpperFirstChar(getReplacementString!(key)));
+                    }
+                    else if (switches.Contains(":lower"))
+                    {
+                        text.Text = text.Text.Replace(match.Value,
+                            Utility.ToLowerFirstChar(getReplacementString!(key)));
+                    }
                     else
                     {
-                        if (switches.Contains(":upper"))
-                        {
-                            text.Text = text.Text.Replace(match.Value, Utility.ToUpperFirstChar(getReplacementString!(key)));
-                        } else if (switches.Contains(":lower"))
-                        {
-                            text.Text = text.Text.Replace(match.Value, Utility.ToLowerFirstChar(getReplacementString!(key)));
-                        }
-                        else
-                        {
-                            text.Text = text.Text.Replace(match.Value, getReplacementString!(key));
-                        }
+                        text.Text = text.Text.Replace(match.Value, getReplacementString!(key));
                     }
 
                 }

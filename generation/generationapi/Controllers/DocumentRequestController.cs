@@ -1,7 +1,12 @@
 using System.Runtime.InteropServices.JavaScript;
 using DocProcessor;
+using DocumentFormat.OpenXml.Presentation;
+using generationapi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+using Document = DocProcessor.Document;
 
 namespace generationapi.Controllers;
 
@@ -15,17 +20,31 @@ public class DocumentRequestController : Controller
         Obj = new JObject();
     }
     
-    /*
-    public IActionResult DocRequest([FromBody] string data)
+    [HttpPost("DocRequest")]
+    public IActionResult DocRequest([FromBody] DocumentRequest data)
     {
 
-        Obj = JObject.Parse(data);
+        if (data is null)
+        {
+            return BadRequest();
+        }
+        
+        DefaultContractResolver contractResolver = new DefaultContractResolver
+        {
+            NamingStrategy = new SnakeCaseNamingStrategy()
+        };        
+
+        Obj = JObject.Parse(JsonConvert.SerializeObject(data, new JsonSerializerSettings
+        {
+            ContractResolver = contractResolver,
+            Formatting = Formatting.Indented
+        }));
             
-        // byte[] result = GenerateDocument(Obj);
+        byte[] result = GenerateDocument(Obj, TagReplace);
             
         return new FileContentResult(result, "application/octet-stream");
             
-    }*/
+    }
 
     private byte[] GenerateDocument(JObject data, Func<string, string> replacementFunc)
     {
@@ -57,7 +76,8 @@ public class DocumentRequestController : Controller
         // 5. Replace all tags
         
         //replace the tags
-        doc.SearchAndReplaceTextByRegex(@"<([\w \[\]._-]{3,})>", replacementFunc); 
+        //doc.SearchAndReplaceTextByRegex(@"<([\w \[\]._-]{3,})>", replacementFunc); 
+        doc.ProcessDocument(replacementFunc, Obj);
         
         // 6. Save doc into byte array
         
@@ -78,9 +98,9 @@ public class DocumentRequestController : Controller
         // 3. otherwise just return the value
         // 4. if the value does not exist, return {ERR: key}
 
-        JToken token;
+        JToken? token = Obj.SelectToken(objPath);
 
-        if (Obj.TryGetValue(objPath, out token))
+        if (token != null)
         {
 
             string val = token.ToString();
