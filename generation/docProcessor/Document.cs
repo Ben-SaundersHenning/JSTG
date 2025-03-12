@@ -167,6 +167,40 @@ public class Document: IDisposable
                         text.Text = text.Text.Replace(match.Value, date.ToString(dateFormat));
                     }
                     
+                    // a pronoun
+                    // ex: << [key.gender] :p0 >>
+                    // ex: << [key.gender] :p0 :upper >>
+                    // p0, p1, p2, p3 are valid switches
+                    if (key.Contains("gender"))
+                    {
+                        //TODO handle the case when there is more than one switch
+                        switch (switches.Trim().Replace(":", ""))
+                        {
+                           case "p0":
+                               if (replacement == "Male") { replacement = "male"; }
+                               else if (replacement == "Female") { replacement = "female"; }
+                               else { replacement = "person"; }
+                               break;
+                           case "p1":
+                               if (replacement == "Male") { replacement = "he"; }
+                               else if (replacement == "Female") { replacement = "she"; }
+                               else { replacement = "they"; }
+                               break;
+                           case "p2":
+                               if (replacement == "Male") { replacement = "his"; }
+                               else if (replacement == "Female") { replacement = "her"; }
+                               else { replacement = "their"; }
+                               break;
+                           case "p3":
+                               if (replacement == "Male") { replacement = "himself"; }
+                               else if (replacement == "Female") { replacement = "herself"; }
+                               else { replacement = "themself"; }
+                               break;
+                           default:
+                               break;
+                        }
+                    }
+                    
                     if (switches.Contains(":upper"))
                     {
                         text.Text = text.Text.Replace(match.Value,

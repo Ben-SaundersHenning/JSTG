@@ -103,16 +103,7 @@ public class DocumentRequestController : Controller
         if (token != null)
         {
 
-            string val = token.ToString();
-
-
-            if (val.Contains("pronoun"))
-            {
-                // ex: <@ [claimant.gender] -t p0 --upper >>
-                // TODO
-            }
-
-            return val;
+            return token.ToString();
 
         }
 
