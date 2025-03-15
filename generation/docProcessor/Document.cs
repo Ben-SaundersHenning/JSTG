@@ -30,7 +30,10 @@ public class Document: IDisposable
     private Body Body { get; set; }
     
     private string SavePath { get; set; }
+    
     private string TempPath { get; set; }
+
+    private string DirPath { get; set; }
     
     private uint AltChunkCount { get; set; }
     
@@ -40,6 +43,7 @@ public class Document: IDisposable
         
         SavePath = path;
         TempPath = SavePath.Replace(".docx", "_temp.docx");
+        DirPath = Path.GetDirectoryName(SavePath);
         AltChunkCount = 0; 
         CreateTempCopyOfDocument(SavePath, TempPath);
         if (type == DocumentType.ExistingDocument)
@@ -104,7 +108,7 @@ public class Document: IDisposable
     public void ProcessDocument(Func<string, string>? getReplacementString, JObject data)
     {
         
-        string regexp = @"<<((?:if|\/if||) {0,})\[([\w \[\]._-]{3,})\]([\w \[\].:_-]{0,})>>";
+        string regexp = @"<<((?:if|\/if|doc||) {0,})\[([\w \[\]._-]{3,})\]([\w \[\].:_-]{0,})>>";
         Regex matcher = new Regex(regexp);
         
         foreach (Paragraph para in Body!.Descendants<Paragraph>())
@@ -125,11 +129,30 @@ public class Document: IDisposable
 
                 foreach (Match match in matcher.Matches(text.Text))
                 {
-                    
+
+                    string tagType = match.Groups[1].Value;
                     string key = match.Groups[2].Value;
                     string replacement = getReplacementString!(key);
                     string[] keys = key.Split(' ');
                     string switches = match.Groups[3].Value;
+
+                    if (tagType.Contains("doc"))
+                    {
+
+                        string docPath = key;
+                        string subDoc = $"{DirPath}/{docPath}";
+                        if (!File.Exists(subDoc))
+                        {
+                            text.Text = text.Text.Replace(match.Value, $"<<NULL: {docPath} DOES NOT EXIST>>");
+                            continue;
+                        }
+
+                        Document toInsert = new Document(subDoc, DocumentType.ExistingDocument);
+                        this.ReplaceTextWithDocument(match.Value, toInsert, getReplacementString, data);
+                        toInsert.Dispose();
+                        continue;
+
+                    }
 
                     /*
                     // <<if [a == b]>>
@@ -272,15 +295,28 @@ public class Document: IDisposable
         
     }
     
-    public void ReplaceTextWithDocument(string text, Document doc)
+    
+    public void ReplaceTextWithDocument(string text, Document doc, Func<string, string>? getReplacementString, JObject? data)
     {
 
         string altChunkId = $"AltChunkId{++AltChunkCount}";
         AlternativeFormatImportPart chunk = MainPart.AddAlternativeFormatImportPart(AlternativeFormatImportPartType.WordprocessingML, altChunkId);
-
-        using (FileStream fileSteam = File.Open(doc.SavePath, FileMode.Open))
+        
+        if (getReplacementString != null && data != null)
         {
-            chunk.FeedData(fileSteam);
+            doc.ProcessDocument(getReplacementString, data);
+            doc.Save();
+            using (FileStream fileSteam = File.Open(doc.TempPath, FileMode.Open))
+            {
+                chunk.FeedData(fileSteam);
+            }
+        }
+        else
+        {
+            using (FileStream fileSteam = File.Open(doc.SavePath, FileMode.Open))
+            {
+                chunk.FeedData(fileSteam);
+            }
         }
 
         AltChunk altChunk = new AltChunk();
