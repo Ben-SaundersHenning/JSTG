@@ -11,6 +11,7 @@ use log4rs::encode::pattern::PatternEncoder;
 use log4rs::Config;
 
 mod db;
+mod fs;
 mod document_request;
 mod storage;
 mod util;
@@ -92,6 +93,11 @@ pub enum Error {
     Serde(#[from] serde_json::Error),
     #[error("Error making HTTP request.")]
     Reqwest(#[from] reqwest::Error),
+    #[error("Error validating document API response.")]
+    DocErr,
+    #[error("Error saving file to disk.")]
+    WriteErr,
+
 
 }
 

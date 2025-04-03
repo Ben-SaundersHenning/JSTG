@@ -3,8 +3,11 @@ mod cat;
 mod mrb;
 
 use crate::db;
+use crate::fs;
+use crate::fs::save_file_to_disk;
 use crate::Error;
 use ac::Ac;
+use bytes::Bytes;
 use cat::Cat;
 use mrb::Mrb;
 use serde::{Serialize, Deserialize};
@@ -155,7 +158,7 @@ impl DocumentRequest {
 
     }
 
-    async fn send_request(self) -> Result<Response, Error> {
+    async fn send_request(self) -> Result<Bytes, Error> {
 
         let request = serde_json::to_string(&self).unwrap();
 
@@ -167,19 +170,21 @@ impl DocumentRequest {
             .send()
             .await?;
 
-        Ok(res)
+        // Ok(res)
 
-        // match res.status() {
-        //     reqwest::StatusCode::OK => {
-        //
-        //         // File
-        //         let body = res.bytes().await?;
-        //
-        //         return Ok(body);
-        //
-        //     },
-        //     _status => {},
-        // }
+        match res.status() {
+            reqwest::StatusCode::OK => {
+
+                // File
+                let body = res.bytes().await?;
+
+                return Ok(body);
+
+            },
+            _status => {},
+        }
+
+        Err(Error::DocErr)
 
     }
 
@@ -187,15 +192,26 @@ impl DocumentRequest {
 
 
 #[tauri::command]
-pub async fn request_document(data: String) {
+pub async fn request_document(data: String) -> Result<String, String> {
 
     info!(target: "app", "Processing new request.");
 
     let request = FormRequest::from_json(data).unwrap();
-    let _document_request = request.build_document_request().await;
-    // let response = document_request.send_request();
+    let document_request = request.build_document_request().await;
+    let response = document_request.send_request().await;
 
-    let json = serde_json::to_string(&_document_request).unwrap();
-    println!("{}", json);
+    match response {
+        Ok(file) => {
+            let _ = save_file_to_disk(file, "test.docx".to_string());
+            return Ok("Successfully saved file to disk".to_owned());
+        },
+        Err(_e) => {
+
+        }
+    }
+
+    // let json = serde_json::to_string(&_document_request).unwrap();
+    // println!("{}", json);
+    Err("Error saving file to the disk".to_string())
 
 }
