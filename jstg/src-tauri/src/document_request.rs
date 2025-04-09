@@ -2,8 +2,11 @@ mod ac;
 mod cat;
 mod mrb;
 
+use dotenv::dotenv;
+use dotenv_codegen::dotenv;
+
 use crate::db;
-use crate::fs;
+// use crate::fs;
 use crate::fs::save_file_to_disk;
 use crate::Error;
 use ac::Ac;
@@ -13,9 +16,10 @@ use mrb::Mrb;
 use serde::{Serialize, Deserialize};
 use chrono::NaiveDate;
 use log::info;
-use reqwest::Response;
 
-const ENDPOINT: &str = "http://localhost:5056/api/DocumentRequest/DocRequest";
+// const ENDPOINT: &str = "http://localhost:8081/DocRequest"; //docker
+const ENDPOINT: &str = "http://localhost:5250/DocRequest";
+const DOC_API_PATH: &str = "/DocRequest";
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
@@ -58,14 +62,14 @@ impl FormRequest {
                                      .unwrap()
                                      .unwrap();
 
-        // 3. Retrieive document path
+        // 3. Retrieive document file name
         let document: db::Document = db::get_document(self.document_id)
                                      .await
                                      .unwrap()
                                      .unwrap();
 
-        // 4. Retrieive image (signature path)
-        let image_data: db::ImageData = db::get_assessor_signature_path(&self.assessor_registration_id)
+        // 4. Retrieive image (signature file name)
+        let image_data: db::ImageData = db::get_assessor_signature_file_name(&self.assessor_registration_id)
                                      .await
                                      .unwrap()
                                      .unwrap();
@@ -95,7 +99,7 @@ impl FormRequest {
         };
 
         // 6. Return a Document Request
-        let document_request = DocumentRequest::from_form_request(self, assessor, &image_data.path, referral_company, document, ac);
+        let document_request = DocumentRequest::from_form_request(self, assessor, &image_data.file_name, referral_company, document, ac);
 
         document_request
 
@@ -107,7 +111,7 @@ impl FormRequest {
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 struct DocumentRequest {
     assessor: db::Assessor,
-    signature_path: String,
+    signature_file_name: String,
     adjuster: Option<String>,
     insurance_company: String,
     claim_number: String,
@@ -122,7 +126,7 @@ struct DocumentRequest {
 
 impl DocumentRequest {
 
-    fn from_form_request(form_request: FormRequest, assessor: db::Assessor, signature_path: &str,
+    fn from_form_request(form_request: FormRequest, assessor: db::Assessor, signature_file_name: &str,
                          referral_company: db::ReferralCompany, document: db::Document, ac: Option<Ac>) -> Self {
 
         // Calculate age in years
@@ -134,7 +138,7 @@ impl DocumentRequest {
 
         DocumentRequest {
             assessor,
-            signature_path: signature_path.to_owned(),
+            signature_file_name: signature_file_name.to_owned(),
             adjuster: form_request.adjuster,
             insurance_company: form_request.insurance_company,
             claim_number: form_request.claim_number,
@@ -162,9 +166,16 @@ impl DocumentRequest {
 
         let request = serde_json::to_string(&self).unwrap();
 
+        let r = request.clone();
+
+        println!("{r}");
+
+        // dotenv!("DOCGEN_API");
+        // dotenv_codegen::dotenv!("DOCGEN_API");
+
         let client = reqwest::Client::new();
         let res = client.post(ENDPOINT)
-            .json(&request)
+            .json(&(&self))
             .header("responseType", "blob")
             .header("content-type", "application/json")
             .send()
@@ -198,6 +209,7 @@ pub async fn request_document(data: String) -> Result<String, String> {
 
     let request = FormRequest::from_json(data).unwrap();
     let document_request = request.build_document_request().await;
+
     let response = document_request.send_request().await;
 
     match response {
@@ -205,13 +217,11 @@ pub async fn request_document(data: String) -> Result<String, String> {
             let _ = save_file_to_disk(file, "test.docx".to_string());
             return Ok("Successfully saved file to disk".to_owned());
         },
-        Err(_e) => {
-
+        Err(e) => {
+            info!(target: "app", "Error: {e}");
         }
     }
 
-    // let json = serde_json::to_string(&_document_request).unwrap();
-    // println!("{}", json);
     Err("Error saving file to the disk".to_string())
 
 }

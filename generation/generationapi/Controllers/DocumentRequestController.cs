@@ -10,16 +10,13 @@ using Document = DocProcessor.Document;
 
 namespace generationapi.Controllers;
 
-public class DocumentRequestController : Controller
+public class DocumentRequestController(IConfiguration configuration) : Controller
 {
     
-    private JObject Obj { get; set; }
+    private JObject Obj { get; set; } = new();
 
-    public DocumentRequestController()
-    {
-        Obj = new JObject();
-    }
-    
+    private readonly IConfiguration Configuration = configuration;
+
     [HttpPost("DocRequest")]
     public IActionResult DocRequest([FromBody] DocumentRequest data)
     {
@@ -53,24 +50,30 @@ public class DocumentRequestController : Controller
         
         using MemoryStream stream = new();
         
-        // 2. Find doc path, open document
+        // 2. Find doc file name, open document
         
-        string docPath = (string)data.SelectToken("document.path");
+        //TODO: check if doc exists
 
-        Document doc = new Document(docPath, DocumentType.ExistingDocument);
+        string filePaths = configuration["TemplatesPath"];
+        string docFileName = (string)data.SelectToken("document.file_name");
+
+        Document doc = new Document(filePaths + docFileName, DocumentType.ExistingDocument);
 
         // 3. Resolve conditional statements
         
         // TODO
         
-        // 3. Find image path
+        // 3. Find image file name
         
-        string imgPath = (string)data.SelectToken("signature_path");
+        //TODO: check if image exists
+        
+        string imgPaths = configuration["ImagesPath"];
+        string imgFileName = (string)data.SelectToken("signature_file_name");
         
         // 4. Insert image into document
         
         //image replace has to be done first, since the tag matches the text replacement tags.
-        Image image = new(imgPath);
+        Image image = new(imgPaths + imgFileName);
         doc.ReplaceTextWithImage("<assessor.signature>", image); 
         
         // 5. Replace all tags

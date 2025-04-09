@@ -70,13 +70,13 @@ pub struct Address {
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 pub struct Document {
     pub id: i32,
-    pub path: String,
+    pub file_name: String,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 pub struct ImageData {
-    pub path: String,
+    pub file_name: String,
 }
 
 
@@ -112,7 +112,7 @@ pub async fn get_document_options() -> Result<JsonListing, Error> {
     Ok(documents)
 }
 
-// Retrieives a document path from the database based on
+// Retrieives a document file name from the database based on
 // a given unique ID.
 pub async fn get_document(document_id: i32) -> Result<Option<Document>, Error> {
     let mut conn_str: String = String::new();
@@ -127,7 +127,7 @@ pub async fn get_document(document_id: i32) -> Result<Option<Document>, Error> {
     let mut conn = PgConnection::connect(&conn_str).await?;
 
     let query = "SELECT id,
-                        path
+                        file_name
                  FROM \"documents\"
                  WHERE id = $1";
 
@@ -279,7 +279,7 @@ pub async fn get_referral_company(
     Ok(company)
 }
 
-pub async fn get_assessor_signature_path(registration_id: &str) -> Result<Option<ImageData>, Error> {
+pub async fn get_assessor_signature_file_name(registration_id: &str) -> Result<Option<ImageData>, Error> {
 
     let mut conn_str: String = String::new();
 
@@ -292,7 +292,7 @@ pub async fn get_assessor_signature_path(registration_id: &str) -> Result<Option
 
     let mut conn = PgConnection::connect(&conn_str).await?;
 
-    let query = "SELECT path
+    let query = "SELECT file_name
                  FROM \"images\"
                  WHERE assessor_id = $1
                  AND image_type = 'signature'";

@@ -12,7 +12,7 @@ pub fn save_file_to_disk(file: Bytes, file_name: String) -> Result<(), Error> {
 
     let settings = Settings::open();
 
-    let mut path = settings.get("document_save_path").unwrap().to_owned();
+    let mut path = settings.get("documentSavePath").unwrap().to_owned();
 
     match create_dir_all(path.clone()) {
         Ok(_) => {

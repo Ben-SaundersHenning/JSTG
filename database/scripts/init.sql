@@ -111,7 +111,7 @@ CREATE TABLE public.documents (
     name text NOT NULL,
     user_friendly_name text NOT NULL,
     common_name text NOT NULL,
-    path text NOT NULL
+    file_name text NOT NULL
 );
 
 
@@ -147,7 +147,7 @@ CREATE TABLE public.images (
     id integer NOT NULL,
     assessor_id character varying(8),
     image_type public.image_type NOT NULL,
-    path text NOT NULL
+    file_name text NOT NULL
 );
 
 
@@ -271,30 +271,30 @@ INSERT INTO public.assessors (registration_id, first_name, last_name, gender, em
 -- Data for Name: documents; Type: TABLE DATA; Schema: public; Owner: jstg
 --
 
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (1, 'Test Document 1', 'AC', 'AC', 'TD1.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (2, 'Test Document 2', 'AC MRB', 'AC MRB', 'TD2.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (3, 'Test Document 3', 'AC MRB NEB', 'AC MRB NEB', 'TD3.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (4, 'Test Document 4', 'AC NEB', 'AC NEB', 'TD4.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (5, 'Test Document 5', 'CAT', 'CAT', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (6, 'Test Document 5', 'CAT AC', 'CAT AC', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (7, 'Test Document 5', 'CAT AC MRB', 'CAT AC MRB', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (8, 'Test Document 5', 'CAT CAT_GOSE', 'CAT CAT_GOSE', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (9, 'Test Document 5', 'CAT CAT_GOSE MRB', 'CAT CAT_GOSE MRB', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (10, 'Test Document 5', 'CAT_GOSE', 'CAT_GOSE', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (11, 'Test Document 5', 'MRB', 'MRB', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (12, 'Test Document 5', 'MRB NEB', 'MRB NEB', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, path) VALUES (13, 'Test Document 5', 'NEB', 'NEB', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (1, 'Test Document 1', 'AC', 'AC', 'TD1.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (2, 'Test Document 2', 'AC MRB', 'AC MRB', 'TD2.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (3, 'Test Document 3', 'AC MRB NEB', 'AC MRB NEB', 'TD3.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (4, 'Test Document 4', 'AC NEB', 'AC NEB', 'TD4.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (5, 'Test Document 5', 'CAT', 'CAT', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (6, 'Test Document 5', 'CAT AC', 'CAT AC', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (7, 'Test Document 5', 'CAT AC MRB', 'CAT AC MRB', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (8, 'Test Document 5', 'CAT CAT_GOSE', 'CAT CAT_GOSE', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (9, 'Test Document 5', 'CAT CAT_GOSE MRB', 'CAT CAT_GOSE MRB', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (10, 'Test Document 5', 'CAT_GOSE', 'CAT_GOSE', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (11, 'Test Document 5', 'MRB', 'MRB', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (12, 'Test Document 5', 'MRB NEB', 'MRB NEB', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (13, 'Test Document 5', 'NEB', 'NEB', 'TD5.docx');
 
 
 --
 -- Data for Name: images; Type: TABLE DATA; Schema: public; Owner: jstg
 --
 
-INSERT INTO public.images (id, assessor_id, image_type, path) VALUES (1, 'G1234569', 'signature', '../test/sfs');
-INSERT INTO public.images (id, assessor_id, image_type, path) VALUES (2, 'G1234559', 'signature', '../test/sfs');
-INSERT INTO public.images (id, assessor_id, image_type, path) VALUES (3, 'G6543219', 'signature', '../test/sfs');
-INSERT INTO public.images (id, assessor_id, image_type, path) VALUES (4, 'G1597539', 'signature', '../test/sfs');
-INSERT INTO public.images (id, assessor_id, image_type, path) VALUES (5, 'G1597535', 'signature', '../test/sfs');
+INSERT INTO public.images (id, assessor_id, image_type, file_name) VALUES (1, 'G1234569', 'signature', 'aa.png');
+INSERT INTO public.images (id, assessor_id, image_type, file_name) VALUES (2, 'G1234559', 'signature', 'bb.png');
+INSERT INTO public.images (id, assessor_id, image_type, file_name) VALUES (3, 'G6543219', 'signature', 'cc.png');
+INSERT INTO public.images (id, assessor_id, image_type, file_name) VALUES (4, 'G1597539', 'signature', 'dd.png');
+INSERT INTO public.images (id, assessor_id, image_type, file_name) VALUES (5, 'G1597535', 'signature', 'ee.png');
 
 --
 -- Data for Name: referral_companies; Type: TABLE DATA; Schema: public; Owner: jstg

@@ -8,8 +8,8 @@ public class DocumentRequest
    [JsonPropertyName("assessor")]
    public Assessor assessor { get; set; } 
    
-   [JsonPropertyName("signature_path")]
-   public string signaturePath { get; set; }
+   [JsonPropertyName("signature_file_name")]
+   public string signatureFileName { get; set; }
    
    [JsonPropertyName("adjuster")]
    public string? adjuster { get; set; }
@@ -87,8 +87,8 @@ public class Document
    [JsonPropertyName("id")]
    public int id { get; set; }
    
-   [JsonPropertyName("path")]
-   public string path { get; set; }
+   [JsonPropertyName("file_name")]
+   public string fileName { get; set; }
    
 }
 
