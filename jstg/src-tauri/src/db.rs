@@ -70,6 +70,7 @@ pub struct Address {
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 pub struct Document {
     pub id: i32,
+    pub user_friendly_name: String,
     pub file_name: String,
 }
 
@@ -127,6 +128,7 @@ pub async fn get_document(document_id: i32) -> Result<Option<Document>, Error> {
     let mut conn = PgConnection::connect(&conn_str).await?;
 
     let query = "SELECT id,
+                        user_friendly_name,
                         file_name
                  FROM \"documents\"
                  WHERE id = $1";

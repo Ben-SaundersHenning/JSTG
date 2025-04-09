@@ -1814,6 +1814,7 @@ dependencies = [
  "bytes",
  "chrono",
  "dirs",
+ "dotenvy",
  "log",
  "log4rs",
  "reqwest",

@@ -87,6 +87,9 @@ public class Document
    [JsonPropertyName("id")]
    public int id { get; set; }
    
+   [JsonPropertyName("user_friendly_name")]
+   public string userFriendlyName { get; set; }
+   
    [JsonPropertyName("file_name")]
    public string fileName { get; set; }
    

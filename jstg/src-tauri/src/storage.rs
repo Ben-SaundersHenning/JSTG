@@ -37,7 +37,7 @@ impl Settings {
 
                     // insert each setting into the hashmap
                     for line in fs::read_to_string(settings_file_path).unwrap().lines() {
-                        let key_vals: Vec<&str> = line.split(":")
+                        let key_vals: Vec<&str> = line.split("=")
                                         .map(|x| x.trim())
                                         .collect();
                         settings.settings.insert(key_vals[0].to_string(), key_vals[1].to_string());
@@ -68,7 +68,7 @@ impl Settings {
                     };
 
                     for (key, value) in settings.clone().settings.into_iter() {
-                        write!(&mut writer, "{key}: {value}\n").unwrap();
+                        write!(&mut writer, "{key}={value}\n").unwrap();
                     }
 
                     writer.flush().unwrap();
@@ -157,7 +157,7 @@ impl Settings {
         let mut writer = BufWriter::new(file);
 
         for (key, value) in self.settings.clone().into_iter() {
-            write!(&mut writer, "{key}: {value}\n").unwrap();
+            write!(&mut writer, "{key}={value}\n").unwrap();
         }
 
         writer.flush().unwrap();

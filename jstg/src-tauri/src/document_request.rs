@@ -2,12 +2,11 @@ mod ac;
 mod cat;
 mod mrb;
 
-use dotenv::dotenv;
-use dotenv_codegen::dotenv;
-
+use dotenvy::var;
 use crate::db;
 // use crate::fs;
 use crate::fs::save_file_to_disk;
+use crate::storage::Settings;
 use crate::Error;
 use ac::Ac;
 use bytes::Bytes;
@@ -170,11 +169,17 @@ impl DocumentRequest {
 
         println!("{r}");
 
-        // dotenv!("DOCGEN_API");
-        // dotenv_codegen::dotenv!("DOCGEN_API");
+        // TODO: FOR RELEASE
+        // let endp = var("DOCUMENT_API").unwrap();
+        let settings = Settings::open();
+        let endp = settings.get("DOCUMENT_API").unwrap().to_owned();
+
+        let endpoint = format!("{endp}/DocRequest");
+
+        info!(target: "app", "Pointing to {0}", endpoint.clone());
 
         let client = reqwest::Client::new();
-        let res = client.post(ENDPOINT)
+        let res = client.post(endpoint)
             .json(&(&self))
             .header("responseType", "blob")
             .header("content-type", "application/json")
@@ -199,6 +204,22 @@ impl DocumentRequest {
 
     }
 
+    fn build_file_name(&self) -> String {
+
+        let file = format!("{}_{}_{} {}_{}.docx", 
+            self.referral_company.common_name,
+            self.document.user_friendly_name,
+            self.claimant.first_name,
+            self.claimant.last_name,
+            format!("{}{}",
+                self.assessor.first_name.chars().next().unwrap(),
+                self.assessor.last_name.chars().next().unwrap()
+            ));
+
+        file
+
+    }
+
 }
 
 
@@ -209,12 +230,13 @@ pub async fn request_document(data: String) -> Result<String, String> {
 
     let request = FormRequest::from_json(data).unwrap();
     let document_request = request.build_document_request().await;
+    let file_name = document_request.build_file_name();
 
     let response = document_request.send_request().await;
 
     match response {
         Ok(file) => {
-            let _ = save_file_to_disk(file, "test.docx".to_string());
+            let _ = save_file_to_disk(file, file_name);
             return Ok("Successfully saved file to disk".to_owned());
         },
         Err(e) => {
