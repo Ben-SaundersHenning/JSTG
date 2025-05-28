@@ -17,7 +17,8 @@ using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 public enum DocumentType
 {
     NewDocument,
-    ExistingDocument
+    ExistingDocument,
+    Template
 }
 
 public class Document: IDisposable
@@ -42,11 +43,23 @@ public class Document: IDisposable
     {
         
         SavePath = path;
-        TempPath = SavePath.Replace(".docx", "_temp.docx");
+
+        if (SavePath.EndsWith(".docx"))
+        {
+            TempPath = SavePath.Replace(".docx", "_temp.docx");
+        } else if (SavePath.EndsWith(".dotx"))
+        {
+            TempPath = SavePath.Replace(".dotx", "_temp.docx");
+        }
+        else
+        {
+            throw new ArgumentException("Invalid document path. Only docx and dotx are supported.");
+        }
+        
         DirPath = Path.GetDirectoryName(SavePath);
         AltChunkCount = 0; 
         CreateTempCopyOfDocument(SavePath, TempPath);
-        if (type == DocumentType.ExistingDocument)
+        if (type == DocumentType.ExistingDocument || type == DocumentType.Template)
         {
             OpenExistingDocument(TempPath);
         }
@@ -108,12 +121,15 @@ public class Document: IDisposable
     public void ProcessDocument(Func<string, string>? getReplacementString, JObject data)
     {
         
-        string regexp = @"<<((?:if|\/if|doc||) {0,})\[([\w \[\]._-]{3,})\]([\w \[\].:_-]{0,})>>";
+        string regexp = @"<<((?:if|doc|) {0,})\[([\w \[\]\\\/._-]{3,})\]([\w \[\]\\\/.:_-]{0,})>>";
         Regex matcher = new Regex(regexp);
         
-        foreach (Paragraph para in Body!.Descendants<Paragraph>())
+        IEnumerable<Paragraph> paragraphs = Body!.Descendants<Paragraph>();
+
+        Paragraph para;
+        for (int i = paragraphs.Count() - 1; i >= 0; i--)
         {
-            
+            para = paragraphs.ElementAt(i);
             if (!matcher.IsMatch(para.InnerText))
             {
                 continue;
@@ -139,8 +155,10 @@ public class Document: IDisposable
                     if (tagType.Contains("doc"))
                     {
 
+                        // relative path to parent doc
                         string docPath = key;
                         string subDoc = $"{DirPath}/{docPath}";
+                        
                         if (!File.Exists(subDoc))
                         {
                             text.Text = text.Text.Replace(match.Value, $"<<NULL: {docPath} DOES NOT EXIST>>");
@@ -206,21 +224,26 @@ public class Document: IDisposable
                         switch (allSwitches.FindLast(s => s[0] == 'p'))
                         {
                            case "p0":
+                               if (replacement == "Male") { replacement = "mr."; }
+                               else if (replacement == "Female") { replacement = "ms."; }
+                               else { replacement = "mx."; }
+                               break;
+                           case "p1":
                                if (replacement == "Male") { replacement = "male"; }
                                else if (replacement == "Female") { replacement = "female"; }
                                else { replacement = "person"; }
                                break;
-                           case "p1":
+                           case "p2":
                                if (replacement == "Male") { replacement = "he"; }
                                else if (replacement == "Female") { replacement = "she"; }
                                else { replacement = "they"; }
                                break;
-                           case "p2":
+                           case "p3":
                                if (replacement == "Male") { replacement = "his"; }
                                else if (replacement == "Female") { replacement = "her"; }
                                else { replacement = "their"; }
                                break;
-                           case "p3":
+                           case "p4":
                                if (replacement == "Male") { replacement = "himself"; }
                                else if (replacement == "Female") { replacement = "herself"; }
                                else { replacement = "themself"; }
@@ -249,7 +272,7 @@ public class Document: IDisposable
                 
             }
 
-        } 
+        }
         
     }
 
