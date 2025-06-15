@@ -26,4 +26,8 @@
       <None Remove="TestRunner\**" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\common\common.csproj" />
+    </ItemGroup>
+
 </Project>

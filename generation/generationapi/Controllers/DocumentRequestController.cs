@@ -1,7 +1,9 @@
 using System.Runtime.InteropServices.JavaScript;
+using common;
+using common.Interfaces;
+using common.Models;
 using DocProcessor;
 using DocumentFormat.OpenXml.Presentation;
-using generationapi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
@@ -25,6 +27,8 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
         {
             return BadRequest();
         }
+
+        DocumentLogic logic = new(data);
         
         DefaultContractResolver contractResolver = new DefaultContractResolver
         {
@@ -37,13 +41,13 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
             Formatting = Formatting.Indented
         }));
             
-        byte[] result = GenerateDocument(Obj, TagReplace);
+        byte[] result = GenerateDocument(Obj, logic, TagReplace);
             
         return new FileContentResult(result, "application/octet-stream");
             
     }
 
-    private byte[] GenerateDocument(JObject data, Func<string, string> replacementFunc)
+    private byte[] GenerateDocument(JObject data, IDocumentLogic logic, Func<string, string> replacementFunc)
     {
         
         // 1. Open stream
@@ -80,7 +84,7 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
         
         //replace the tags
         //doc.SearchAndReplaceTextByRegex(@"<([\w \[\]._-]{3,})>", replacementFunc); 
-        doc.ProcessDocument(replacementFunc, Obj);
+        doc.ProcessDocument(replacementFunc, Obj, logic);
         
         // 6. Save doc into byte array
         

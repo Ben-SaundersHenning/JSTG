@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Web;
+using common.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace DocProcessor;
@@ -118,10 +120,10 @@ public class Document: IDisposable
     }
 
     // Evaluates all tags matching the <<[]>> syntax inside the document.
-    public void ProcessDocument(Func<string, string>? getReplacementString, JObject data)
+    public void ProcessDocument(Func<string, string>? getReplacementString, JObject data, IDocumentLogic logic)
     {
         
-        string regexp = @"<<((?:if|doc|) {0,})\[([\w \[\]\\\/._-]{3,})\]([\w \[\]\\\/.:_-]{0,})>>";
+        string regexp = @"<<((?:if|\/if|doc|logic|) {0,})\[([\w \[\]\\\/._-]{3,})\]([\w \[\]\\\/.:_-]{0,})>>";
         Regex matcher = new Regex(regexp);
         
         IEnumerable<Paragraph> paragraphs = Body!.Descendants<Paragraph>();
@@ -135,10 +137,13 @@ public class Document: IDisposable
                 continue;
             }
 
+            /*
             if (para.Descendants<Text>().Count() > 1)
             {
                 IsolatePatternInParagraph(para, regexp);
             }
+            */
+            IsolatePatternInParagraph(para, regexp);
             
             foreach (Text text in para.Descendants<Text>())
             {
@@ -151,6 +156,32 @@ public class Document: IDisposable
                     string replacement = getReplacementString!(key);
                     string[] keys = key.Split(' ');
                     string switches = match.Groups[3].Value;
+
+                    if (tagType.Contains("if"))
+                    {
+                        bool? result = logic.GetRule(key);
+
+                        if (result is true)
+                        {
+                            // keep the content in the if
+                            // TODO: the tag being looked for is in the same paragraph,
+                            //       but a different text element.
+                            while (para.InnerText != "<</if>>")
+                            {
+                               var paraNext = para.NextSibling<Paragraph>() ?? throw new ArgumentNullException("para.NextSibling<Paragraph>()"); 
+                               para.Remove();
+                               para = paraNext;
+                            }
+                        }
+                        else if (result is false)
+                        {
+                            // keep the content in the else
+                        }
+                        else
+                        {
+                            // remove the tag entire and add a message
+                        }
+                    }
 
                     if (tagType.Contains("doc"))
                     {
@@ -166,7 +197,7 @@ public class Document: IDisposable
                         }
 
                         Document toInsert = new Document(subDoc, DocumentType.ExistingDocument);
-                        this.ReplaceTextWithDocument(match.Value, toInsert, getReplacementString, data);
+                        this.ReplaceTextWithDocument(match.Value, toInsert, getReplacementString, data, logic);
                         toInsert.Dispose();
                         continue;
 
@@ -319,7 +350,7 @@ public class Document: IDisposable
     }
     
     
-    public void ReplaceTextWithDocument(string text, Document doc, Func<string, string>? getReplacementString, JObject? data)
+    public void ReplaceTextWithDocument(string text, Document doc, Func<string, string>? getReplacementString, JObject? data, IDocumentLogic logic)
     {
 
         string altChunkId = $"AltChunkId{++AltChunkCount}";
@@ -327,7 +358,7 @@ public class Document: IDisposable
         
         if (getReplacementString != null && data != null)
         {
-            doc.ProcessDocument(getReplacementString, data);
+            doc.ProcessDocument(getReplacementString, data, logic);
             doc.Save();
             using (FileStream fileSteam = File.Open(doc.TempPath, FileMode.Open))
             {
@@ -468,6 +499,7 @@ public class Document: IDisposable
         SearchAndReplace(pattern, getReplacementString, null, true); //regex replace
     }
 
+    // para -> run -> text elements
     private void IsolatePatternInParagraph(Paragraph para, string pattern)
     {
 
@@ -480,8 +512,6 @@ public class Document: IDisposable
             textTexts.Add(text.Text);
         }
 
-        List<int> indices = IndexPositionsInStrList(textTexts);
-        
         Regex matcher = new Regex(pattern);
         MatchCollection matches = matcher.Matches(para.InnerText);
 
@@ -490,17 +520,17 @@ public class Document: IDisposable
 
             Match match = matches.ElementAt(i);
 
-            int matchStartsInText = WhatPositionIsIndexIn(indices, match.Index);
-            Run matchStartsInRun = (Run)textElements.ElementAt(matchStartsInText).Parent;
-            int matchEndsInText = WhatPositionIsIndexIn(indices, match.Index + match.Value.Length - 1);
-
-            if (matchStartsInText == matchEndsInText)
-            { 
-                continue; //match is over a single text element already.
-            }
+            int[] matchIndices = FindIndicesInMatch(match, textTexts);
+            
+            // if the match starts and ends over a single text element
+            //if(matchIndices[2] == matchIndices[3])
+            //{ 
+            //    continue;
+            //}
 
             #region CreateRunWithMatch
             
+            Run matchStartsInRun = (Run)textElements.ElementAt(matchIndices[2]).Parent;
             Run run = new Run();
             RunProperties propertiesToMatch = matchStartsInRun.RunProperties;
             if (propertiesToMatch != null)
@@ -513,23 +543,21 @@ public class Document: IDisposable
 
             #region RemoveMatchFromOriginalParapgraph
 
-            int matchStartsAtIndex = match.Index - indices.ElementAt(matchStartsInText);
-            int matchEndsAtIndex = match.Index + match.Length - 1 - indices.ElementAt(matchEndsInText);
-
-            for (int j = matchStartsInText; j <= matchEndsInText; j++)
+            // loop through each relevant text element
+            for (int j = matchIndices[2]; j <= matchIndices[3]; j++)
             {
 
                 Text text = textElements.ElementAt(j);
 
-                if (j == matchStartsInText)
+                if (j == matchIndices[2])
                 {
-                    text.Text = text.Text.Remove(matchStartsAtIndex);
+                    text.Text = text.Text.Remove(matchIndices[0]);
                     continue;
                 }
                 
-                if (j == matchEndsInText)
+                if (j == matchIndices[3])
                 {
-                    text.Text = text.Text.Remove(0, matchEndsAtIndex + 1);
+                    text.Text = text.Text.Remove(0, matchIndices[1] + 1);
                     continue;
                 }
 
@@ -551,12 +579,100 @@ public class Document: IDisposable
             {
                 textTexts.Add(text.Text);
             }
-            indices.Clear();
-            indices = IndexPositionsInStrList(textTexts);
+            //indices.Clear();
+            //indices = IndexPositionsInStrList(textTexts);
 
             #endregion
 
         } 
+
+    }
+
+    private int[] FindIndicesInMatch(Match match, List<string> texts)
+    {
+
+        int totalSearchedLen = 0;
+
+        int matchStartsAtTextIndex = -1; // the index in texts that match starts in
+        int matchEndsAtTextIndex = -1; // the index in texts that match ends in
+        int matchStartsAtStringIndex = -1; // the index in the string in texts that match starts at
+        int matchEndsAtStringIndex = -1; // the index in the string in texts that match ends at
+
+        bool foundStart = false;
+        bool foundEnd = false;
+
+        //foreach (string text in texts)
+        for(int i = 0; i < texts.Count; i++)
+        {
+            
+            string text = texts.ElementAt(i);
+            
+            totalSearchedLen += text.Length;
+            
+            // in the text where the match starts
+            if (!foundStart && totalSearchedLen >= (match.Index + 1))
+            {
+
+                matchStartsAtTextIndex = i;
+
+                matchStartsAtStringIndex = (match.Index + 1) - (totalSearchedLen - text.Length) - 1;
+                
+
+                foundStart = true;
+            } 
+            
+            // in the text where the match ends
+            if (!foundEnd && totalSearchedLen >= match.Index + match.Length)
+            {
+                
+                matchEndsAtTextIndex = i;
+
+                matchEndsAtStringIndex = (match.Index + match.Length) - (totalSearchedLen - text.Length) - 1;
+
+                foundEnd = true;
+            }
+
+            if (foundStart && foundEnd)
+            {
+                break;
+            }
+            
+        }
+        
+        return [matchStartsAtStringIndex, matchEndsAtStringIndex, matchStartsAtTextIndex, matchEndsAtTextIndex];
+        
+    }
+
+    private int FindTextElementIndex(Match match, List<Text> textElements, string start)
+    {
+
+        int searchIndex;
+        int curIndex = 0;
+        int i = 0;
+
+        if (start == "start")
+        {
+            // looking for start of tag
+            searchIndex = match.Index;
+        }
+        else
+        {
+            // looking for end of tag
+            searchIndex = match.Index + match.Length - 1;
+        }
+        
+        do
+        {
+
+            Text text = textElements.ElementAt(i);
+
+            curIndex += text.Text.Length;
+
+            i++;
+
+        } while(curIndex < searchIndex);
+        
+        return i;
 
     }
 
