@@ -68,7 +68,7 @@ impl Settings {
                     };
 
                     for (key, value) in settings.clone().settings.into_iter() {
-                        write!(&mut writer, "{key}={value}\n").unwrap();
+                        writeln!(&mut writer, "{key}={value}").unwrap();
                     }
 
                     writer.flush().unwrap();
@@ -91,14 +91,12 @@ impl Settings {
         // }
 
         // default settings
-        let settings = Settings {
+        Settings {
             path: get_settings_file_path().into_os_string().into_string().unwrap(),
             settings: HashMap::from([
                 ("document_save_path".to_string(), get_documents_path().into_os_string().into_string().unwrap())
             ])
-        };
-
-        settings
+        }
 
     }
 
@@ -106,11 +104,8 @@ impl Settings {
     // for a given key
     pub fn get(&self, key: &str) -> Option<&str> {
 
-        match self.settings.get_key_value(key) {
-            Some(val) => {
-                return Some(val.1);
-            },
-            None => {}
+        if let Some(val) = self.settings.get_key_value(key) {
+            return Some(val.1);
         }
 
         None
@@ -120,17 +115,17 @@ impl Settings {
     // Returns every key-value pair in the config
     pub fn get_all(&self) -> Option<HashMap<String, String>> {
 
-        return Some(self.settings.clone());
+        Some(self.settings.clone())
 
     }
 
     // Sets the value for the given key
-    pub fn set(&mut self, key: &str, value: &str) -> bool {
-
-        // overwrite or new key?
-        todo!()
-
-    }
+    // pub fn set(&mut self, key: &str, value: &str) -> bool {
+    //
+    //     // overwrite or new key?
+    //     todo!()
+    //
+    // }
 
     // Overwrites all configuration values
     pub fn set_all(&mut self, values: HashMap<String, String>) -> bool {
@@ -140,14 +135,14 @@ impl Settings {
 
     }
 
-    pub fn remove(&mut self, key: &str) -> bool {
-
-        match self.settings.remove(key) {
-            Some(_) => return true,
-            None => return false
-        }
-
-    }
+    // pub fn remove(&mut self, key: &str) -> bool {
+    //
+    //     match self.settings.remove(key) {
+    //         Some(_) => true,
+    //         None => false
+    //     }
+    //
+    // }
 
     // Writes the configuration values to file
     // Currently assumes that the file does exist
@@ -157,7 +152,7 @@ impl Settings {
         let mut writer = BufWriter::new(file);
 
         for (key, value) in self.settings.clone().into_iter() {
-            write!(&mut writer, "{key}={value}\n").unwrap();
+            writeln!(&mut writer, "{key}={value}").unwrap();
         }
 
         writer.flush().unwrap();

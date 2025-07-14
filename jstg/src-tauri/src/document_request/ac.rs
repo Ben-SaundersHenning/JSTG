@@ -17,7 +17,7 @@ const DATE3: &str = "2015-10-01";
 const DATE4: &str = "2016-10-01";
 const DATE5: &str = "2017-10-01";
 const DATE6: &str = "2018-01-01";
-const DATE7: &str = "2018-04-14";
+// const DATE7: &str = "2018-04-14";
 
 impl Ac {
 
@@ -56,11 +56,6 @@ impl Ac {
 
                         Some(vec!["14.90".to_string(), "11.60".to_string(), "21.11".to_string()])
 
-                } else if val >= parse_date(DATE6).unwrap()
-                    && val < parse_date(DATE7).unwrap() {
-
-                        Some(vec!["14.90".to_string(), "14.00".to_string(), "21.11".to_string()])
-
                 } else {
 
                         Some(vec!["14.90".to_string(), "14.00".to_string(), "21.11".to_string()])
@@ -81,17 +76,11 @@ fn parse_date(input: &str) -> Option<NaiveDate> {
     //try to parse from a date like "2023-11-01"
     let date = NaiveDate::parse_from_str(input, "%Y-%m-%d");
 
-    match date {
-        Ok(d) => return Some(d), //return formatted date
-        _ => {} //try second format
-    }
+    if let Ok(d) = date { return Some(d) }
 
     //try to parse from a date like November 1, 2023
     let date = NaiveDate::parse_from_str(input, "%B %d, %Y");
 
-    match date {
-        Ok(d) => return Some(d), //return formatted date
-        _ => return None //return input
-    }
+    date.ok()
 
 }

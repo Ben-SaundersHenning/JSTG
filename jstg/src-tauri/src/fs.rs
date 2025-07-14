@@ -14,11 +14,8 @@ pub fn save_file_to_disk(file: Bytes, file_name: String) -> Result<(), Error> {
 
     let mut path = settings.get("documentSavePath").unwrap().to_owned();
 
-    match create_dir_all(path.clone()) {
-        Ok(_) => {
-            path.push_str(format!("/{file_name}").as_str());
-        },
-        Err(_) => {}
+    if create_dir_all(path.clone()).is_ok() {
+        path.push_str(format!("/{file_name}").as_str());
     }
 
     info!(target: "app", "Saving file as: {0}", path);

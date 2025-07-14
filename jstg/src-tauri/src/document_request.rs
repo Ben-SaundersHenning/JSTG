@@ -2,7 +2,6 @@ mod ac;
 mod cat;
 mod mrb;
 
-use dotenvy::var;
 use crate::db;
 // use crate::fs;
 use crate::fs::save_file_to_disk;
@@ -17,8 +16,8 @@ use chrono::NaiveDate;
 use log::info;
 
 // const ENDPOINT: &str = "http://localhost:8081/DocRequest"; //docker
-const ENDPOINT: &str = "http://localhost:5250/DocRequest";
-const DOC_API_PATH: &str = "/DocRequest";
+//const ENDPOINT: &str = "http://localhost:5250/DocRequest";
+// const DOC_API_PATH: &str = "/DocRequest";
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
@@ -98,9 +97,7 @@ impl FormRequest {
         };
 
         // 6. Return a Document Request
-        let document_request = DocumentRequest::from_form_request(self, assessor, &image_data.file_name, referral_company, document, ac);
-
-        document_request
+        DocumentRequest::from_form_request(self, assessor, &image_data.file_name, referral_company, document, ac)
 
     }
 
@@ -206,17 +203,14 @@ impl DocumentRequest {
 
     fn build_file_name(&self) -> String {
 
-        let file = format!("{}_{}_{} {}_{}.docx", 
+        format!("{}_{}_{} {}_{}{}.docx",
             self.referral_company.common_name,
             self.document.user_friendly_name,
             self.claimant.first_name,
             self.claimant.last_name,
-            format!("{}{}",
-                self.assessor.first_name.chars().next().unwrap(),
-                self.assessor.last_name.chars().next().unwrap()
-            ));
-
-        file
+            self.assessor.first_name.chars().next().unwrap(),
+            self.assessor.last_name.chars().next().unwrap()
+        )
 
     }
 
