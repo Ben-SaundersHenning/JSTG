@@ -186,28 +186,29 @@ public class Document: IDisposable
                            // traverse until finding the </if>
                            if (result is true)
                            { 
-                               Text nextText = texts.ElementAt(j + 1);
-                               text.Remove();
-                               while (text.Text != "<</if>>")
+                               Text nextText = texts.ElementAt(k);
+                               while (nextText.Text != "<</if>>" && nextText.Text != $"<</if [{operand}]>>")
                                {
-                                   text = nextText;
                                    nextText = texts.ElementAt(++k);
                                }
+                               nextText.Remove();
                            }
                            else
                            {
                                Text nextText = texts.ElementAt(k);
-                               while (text.Text != "<</if>>")
+                               while (nextText.Text != "<</if>>" && nextText.Text != $"<</if [{operand}]>>")
                                {
-                                   text.Remove();
-                                   k -= 1;
-                                   text = nextText;
+                                   nextText.Remove();
+                                   k = k - 1;
                                    nextText = texts.ElementAt(++k);
                                }
-                               // remove the tag entirely
+
+                               nextText.Remove();
                            }
 
+                           // remove the <<if [...]>>
                            text.Remove();
+                           
                            continue;
                        
                        case "/if":
