@@ -1,6 +1,5 @@
-using System.Collections;
-using System.Web;
 using common.Interfaces;
+using DocumentFormat.OpenXml.Office.Word;
 using Newtonsoft.Json.Linq;
 
 namespace DocProcessor;
@@ -15,6 +14,7 @@ using Checked = DocumentFormat.OpenXml.Wordprocessing.Checked;
 using DW = DocumentFormat.OpenXml.Drawing.Wordprocessing;
 using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
+internal readonly record struct MatchIndices(int ElementIndex, int ElementEndIndex, int StringIndex, int StringEndIndex);
 
 public enum DocumentType
 {
@@ -39,7 +39,8 @@ public class Document: IDisposable
     private string DirPath { get; set; }
     
     private uint AltChunkCount { get; set; }
-    
+
+    private Regex Matcher { get; init; }
     
     public Document(string path, DocumentType type)
     {
@@ -57,6 +58,10 @@ public class Document: IDisposable
         {
             throw new ArgumentException("Invalid document path. Only docx and dotx are supported.");
         }
+
+        Matcher = new Regex(
+            @"<<(?<tagtype>if|/if|doc|logic||) *\[(?<operand>[ \w\[\]\\/._-]{3,})\](?<flags>[ \w\[\]\\/.:_-]*)>>|<<(?<tagtype>/if)>>",
+            RegexOptions.Compiled);
         
         DirPath = Path.GetDirectoryName(SavePath);
         AltChunkCount = 0; 
@@ -123,117 +128,118 @@ public class Document: IDisposable
     public void ProcessDocument(Func<string, string>? getReplacementString, JObject data, IDocumentLogic logic)
     {
         
-        string regexp = @"<<((?:if|\/if|doc|logic|) {0,})\[([\w \[\]\\\/._-]{3,})\]([\w \[\]\\\/.:_-]{0,})>>";
-        Regex matcher = new Regex(regexp);
-        
         IEnumerable<Paragraph> paragraphs = Body!.Descendants<Paragraph>();
 
         Paragraph para;
+        
+        // loop through each paragraph to find if it has any matches.
+        // loop backwards because you may have to modify the paragraphs. TODO ?
         for (int i = paragraphs.Count() - 1; i >= 0; i--)
         {
             para = paragraphs.ElementAt(i);
-            if (!matcher.IsMatch(para.InnerText))
+            
+            // if there is no match, continue to next paragraph
+            if(!Matcher.IsMatch(para.InnerText))
             {
                 continue;
             }
 
-            /*
+            // matches are found in Text Elements, 
+            // which are under the tag structure Paragraph > Run > Text.
+            // They aren't necessary in a single text element,
+            // so this function rearranges things so each
+            // match is in its own Text Element (by itself).
             if (para.Descendants<Text>().Count() > 1)
             {
-                IsolatePatternInParagraph(para, regexp);
+                IsolatePatternInParagraph(para);
             }
-            */
-            IsolatePatternInParagraph(para, regexp);
             
-            foreach (Text text in para.Descendants<Text>())
+            // loop through each text element that has a potential match
+            IEnumerable<Text> texts = para!.Descendants<Text>();
+            Text text;
+            //foreach (Text text in para.Descendants<Text>())
+            for(int j = texts.Count() - 1; j >= 0; j--)
             {
+                
+                text = texts.ElementAt(j);
 
-                foreach (Match match in matcher.Matches(text.Text))
+                foreach (Match match in Matcher.Matches(text.Text))
                 {
 
-                    string tagType = match.Groups[1].Value;
-                    string key = match.Groups[2].Value;
-                    string replacement = getReplacementString!(key);
-                    string[] keys = key.Split(' ');
-                    string switches = match.Groups[3].Value;
-
-                    if (tagType.Contains("if"))
-                    {
-                        bool? result = logic.GetRule(key);
-
-                        if (result is true)
-                        {
-                            // keep the content in the if
-                            // TODO: the tag being looked for is in the same paragraph,
-                            //       but a different text element.
-                            while (para.InnerText != "<</if>>")
-                            {
-                               var paraNext = para.NextSibling<Paragraph>() ?? throw new ArgumentNullException("para.NextSibling<Paragraph>()"); 
-                               para.Remove();
-                               para = paraNext;
-                            }
-                        }
-                        else if (result is false)
-                        {
-                            // keep the content in the else
-                        }
-                        else
-                        {
-                            // remove the tag entire and add a message
-                        }
-                    }
-
-                    if (tagType.Contains("doc"))
-                    {
-
-                        // relative path to parent doc
-                        string docPath = key;
-                        string subDoc = $"{DirPath}/{docPath}";
-                        
-                        if (!File.Exists(subDoc))
-                        {
-                            text.Text = text.Text.Replace(match.Value, $"<<NULL: {docPath} DOES NOT EXIST>>");
-                            continue;
-                        }
-
-                        Document toInsert = new Document(subDoc, DocumentType.ExistingDocument);
-                        this.ReplaceTextWithDocument(match.Value, toInsert, getReplacementString, data, logic);
-                        toInsert.Dispose();
-                        continue;
-
-                    }
-
-                    /*
-                    // <<if [a == b]>>
-                    if (match.Groups[1].Value.Contains("if") && keys.Length == 3)
-                    {
-                        switch (keys[1])
-                        {
-                            case "==":
-                                if obj[a] == obj[b]
-                                {
-                                    // keep if content
-                                }
-                                break;
-                            case "!=":
-                                if obj[a] != obj[b]
-                                {
-                                    // remove if content
-                                }
-                                break;
-                        } 
-
-                    }
-                    else
-                    { */
+                    CaptureCollection captures = match.Captures;
                     
+                    string tagType = match.Groups["tagtype"].Value;
+                    string operand = match.Groups["operand"].Value;
+                    string flags = match.Groups["flags"].Value;
+                    
+                    string replacement = getReplacementString!(operand);
+
+                    switch (tagType.Trim())
+                    {
+                        
+                       case "if":
+                           
+                           bool? result = logic.GetRule(operand);
+                           int k = j + 1;
+
+                           // keep the content in the if
+                           // traverse until finding the </if>
+                           if (result is true)
+                           { 
+                               Text nextText = texts.ElementAt(j + 1);
+                               text.Remove();
+                               while (text.Text != "<</if>>")
+                               {
+                                   text = nextText;
+                                   nextText = texts.ElementAt(++k);
+                               }
+                           }
+                           else
+                           {
+                               Text nextText = texts.ElementAt(k);
+                               while (text.Text != "<</if>>")
+                               {
+                                   text.Remove();
+                                   k -= 1;
+                                   text = nextText;
+                                   nextText = texts.ElementAt(++k);
+                               }
+                               // remove the tag entirely
+                           }
+
+                           text.Remove();
+                           continue;
+                       
+                       case "/if":
+                           continue;
+                       
+                       case "doc":
+                           // relative path to parent doc
+                           string docPath = operand;
+                           string subDoc = $"{DirPath}/{docPath}";
+                            
+                           if (!File.Exists(subDoc))
+                           {
+                               text.Text = text.Text.Replace(match.Value, $"<<NULL: {docPath} DOES NOT EXIST>>");
+                               continue;
+                           }
+
+                           Document toInsert = new Document(subDoc, DocumentType.ExistingDocument);
+                           this.ReplaceTextWithDocument(match.Value, toInsert, getReplacementString, data, logic);
+                           toInsert.Dispose();
+                           continue;
+                       
+                       default: // regular tags
+                           break;
+                    }
+
                     DateOnly date;
 
                     // this is a date, need to check formatting.
                     // ex: << [key.date] :f YYYY-mm-dd >>
-                    if (DateOnly.TryParse(replacement, out date) && switches.Contains(":f"))
+                    if (DateOnly.TryParse(replacement, out date) && flags.Contains(":f"))
                     {
-                        List<string> switchStrings = switches.Split(' ').ToList();
+                        List<string> switchStrings = flags.Split(' ').ToList();
                         int index = switchStrings.FindIndex(s => s.Contains(":f")) + 1;
                         string dateFormat = switchStrings[index].Replace('-', ' ');
                         text.Text = text.Text.Replace(match.Value, date.ToString(dateFormat));
@@ -243,13 +249,13 @@ public class Document: IDisposable
                     // ex: << [key.gender] :p0 >>
                     // ex: << [key.gender] :p0 :upper >>
                     // p0, p1, p2, p3 are valid switches
-                    if (key.Contains("gender"))
+                    if (operand.Contains("gender"))
                     {
                         
                         //temp, isolates the p# switches
-                        switches = Regex.Replace(switches, @"\s+", "");
-                        if(switches.Length > 0 && switches[0] == ':') {switches = switches.Substring(1);}
-                        List<string> allSwitches = switches.Trim().Split(':').ToList(); 
+                        flags = Regex.Replace(flags, @"\s+", "");
+                        if(flags.Length > 0 && flags[0] == ':') {flags = flags.Substring(1);}
+                        List<string> allSwitches = flags.Trim().Split(':').ToList(); 
                         allSwitches.RemoveAll(s => s.Length < 1);
                         
                         switch (allSwitches.FindLast(s => s[0] == 'p'))
@@ -282,12 +288,12 @@ public class Document: IDisposable
                         }
                     }
                     
-                    if (switches.Contains(":upper"))
+                    if (flags.Contains(":upper"))
                     {
                         text.Text = text.Text.Replace(match.Value,
                             Utility.ToUpperFirstChar(replacement));
                     }
-                    else if (switches.Contains(":lower"))
+                    else if (flags.Contains(":lower"))
                     {
                         text.Text = text.Text.Replace(match.Value,
                             Utility.ToLowerFirstChar(replacement));
@@ -322,7 +328,7 @@ public class Document: IDisposable
 
             if (para.Descendants<Text>().Count() > 1)
             {
-                IsolatePatternInParagraph(para, pattern);
+                IsolatePatternInParagraph(para);
             }
             
             foreach (Text text in para.Descendants<Text>())
@@ -430,7 +436,7 @@ public class Document: IDisposable
         
         if (para.Descendants<Text>().Count() > 1)
         {
-            IsolatePatternInParagraph(para, text);
+            IsolatePatternInParagraph(para);
         }
 
         Text? t = para.Descendants<Text>().FirstOrDefault(t => t.Text.Contains(text));
@@ -499,8 +505,11 @@ public class Document: IDisposable
         SearchAndReplace(pattern, getReplacementString, null, true); //regex replace
     }
 
-    // para -> run -> text elements
-    private void IsolatePatternInParagraph(Paragraph para, string pattern)
+    // A paragraph has a number of run elements which each can have a number
+    // of text elements. This function takes every 'pattern' match in the paragraph,
+    // and ensures that it is isolated into its own Run element.
+    // Paragraph > Run > Text is the tag structure.
+    private void IsolatePatternInParagraph(Paragraph para)
     {
 
         List<Text> textElements = para.Descendants<Text>().ToList();
@@ -512,25 +521,18 @@ public class Document: IDisposable
             textTexts.Add(text.Text);
         }
 
-        Regex matcher = new Regex(pattern);
-        MatchCollection matches = matcher.Matches(para.InnerText);
+        MatchCollection matches = Matcher.Matches(para.InnerText);
 
         for (int i = 0; i < matches.Count; i++)
         {
 
             Match match = matches.ElementAt(i);
 
-            int[] matchIndices = FindIndicesInMatch(match, textTexts);
+            MatchIndices mi = FindIndicesInMatch(match, textTexts);
             
-            // if the match starts and ends over a single text element
-            //if(matchIndices[2] == matchIndices[3])
-            //{ 
-            //    continue;
-            //}
-
             #region CreateRunWithMatch
             
-            Run matchStartsInRun = (Run)textElements.ElementAt(matchIndices[2]).Parent;
+            Run matchStartsInRun = (Run)textElements.ElementAt(mi.ElementIndex).Parent;
             Run run = new Run();
             RunProperties propertiesToMatch = matchStartsInRun.RunProperties;
             if (propertiesToMatch != null)
@@ -542,29 +544,121 @@ public class Document: IDisposable
             #endregion
 
             #region RemoveMatchFromOriginalParapgraph
+            
+                // int[0]: the index in the string that match starts at
+                // int[1]: the index in the string that match ends at
+                // int[2]: the index of the text element that match starts at
+                // int[3]: the index of the text element that match ends at
+    
+            // if the match starts and ends in the same text element
+            if(mi.ElementIndex == mi.ElementEndIndex)
+            {
+                
+                Text text = textElements.ElementAt(mi.ElementIndex);
+                
+                // 1) match starts at the start of the string
+                //  - remove the match and place the run before the current run
+                if (mi.StringIndex == 0)
+                {
+                    
+                    // remove the match from the text element
+                    text.Text = text.Text.Remove(mi.StringIndex, match.Length);
+
+                    matchStartsInRun.InsertBeforeSelf(run);
+
+                    textElements = para.Descendants<Text>().ToList();
+                    textTexts.Clear();
+                    textElements.ForEach(t => textTexts.Add(t.Text));
+                    continue;
+
+                } 
+                // 2) match ends at the end of the string
+                //  - remove the match
+                //  - Insert the run after the current run
+                else if (mi.StringEndIndex == text.Text.Length - 1)
+                {
+                    
+                    // remove the match from the text element
+                    text.Text = text.Text.Remove(mi.StringIndex, match.Length);
+
+                    matchStartsInRun.InsertAfterSelf(run);
+                    
+                    textElements = para.Descendants<Text>().ToList();
+                    textTexts.Clear();
+                    textElements.ForEach(t => textTexts.Add(t.Text));
+                    continue;
+                    
+                }
+                // 3) match is in between other text
+                //  - Save the string that comes after the match.
+                //  - Remove all the content except for the text before the match.
+                //  - Insert the run after the current run
+                //  - Insert a new run with the saved string, after the inserted run.
+                else
+                {
+                   
+                    string afterMatchText = text.Text.Substring(mi.StringEndIndex + 1);
+                    
+                    // remove the match and the afterMatchText from the text element
+                    text.Text = text.Text.Remove(mi.StringIndex);
+                    
+                    matchStartsInRun.InsertAfterSelf(run);
+                    
+                    Run runTemp = new Run();
+                    if (propertiesToMatch != null)
+                    {
+                        runTemp.AppendChild((RunProperties)propertiesToMatch.CloneNode(true));
+                    }
+                    runTemp.AppendChild(new Text(afterMatchText));
+
+                    run.InsertAfterSelf(runTemp); 
+                    
+                    textElements = para.Descendants<Text>().ToList();
+                    textTexts.Clear();
+                    textElements.ForEach(t => textTexts.Add(t.Text));
+                    continue;
+                    
+                }
+            }
 
             // loop through each relevant text element
-            for (int j = matchIndices[2]; j <= matchIndices[3]; j++)
+            for (int j = mi.ElementIndex; j <= mi.ElementEndIndex; j++)
             {
 
                 Text text = textElements.ElementAt(j);
+                
+                // SCENARIOS:
+                
+                // IN STARTING TEXT ELEMENT
+                // IN ENDING TEXT ELEMENT
+                // IN A TEXT ELEMENT WHERE THE ENTIRE TEXT IS JUST TAG
 
-                if (j == matchIndices[2])
+                // in starting element
+                if (j == mi.ElementIndex)
                 {
-                    text.Text = text.Text.Remove(matchIndices[0]);
+                    text.Text = text.Text.Remove(mi.StringIndex);
+                    textElements = para.Descendants<Text>().ToList();
+                    textTexts.Clear();
+                    textElements.ForEach(t => textTexts.Add(t.Text));
                     continue;
                 }
                 
-                if (j == matchIndices[3])
+                // in ending element
+                if (j == mi.ElementEndIndex)
                 {
-                    text.Text = text.Text.Remove(0, matchIndices[1] + 1);
+                    text.Text = text.Text.Remove(0, mi.StringEndIndex + 1);
+                    textElements = para.Descendants<Text>().ToList();
+                    textTexts.Clear();
+                    textElements.ForEach(t => textTexts.Add(t.Text));
                     continue;
                 }
 
-                //if the text contained only the tag and absolutely nothing else..
+                //if the text contained only the tag and absolutely nothing else
                 text.Remove();
                     
             }
+            
+            //TODO: AFTER MODIFING THE PARAGRAPH, RESET THE TEXTS LISTS
             
             #endregion
             
@@ -575,10 +669,7 @@ public class Document: IDisposable
             //This is a temporary solution, should really be updating the existing lists
             textElements = para.Descendants<Text>().ToList();
             textTexts.Clear();
-            foreach (Text text in textElements)
-            {
-                textTexts.Add(text.Text);
-            }
+            textElements.ForEach(t => textTexts.Add(t.Text));
             //indices.Clear();
             //indices = IndexPositionsInStrList(textTexts);
 
@@ -588,10 +679,10 @@ public class Document: IDisposable
 
     }
 
-    private int[] FindIndicesInMatch(Match match, List<string> texts)
+    private MatchIndices FindIndicesInMatch(Match match, List<string> texts)
     {
 
-        int totalSearchedLen = 0;
+        int indexScanned = -1;
 
         int matchStartsAtTextIndex = -1; // the index in texts that match starts in
         int matchEndsAtTextIndex = -1; // the index in texts that match ends in
@@ -607,40 +698,45 @@ public class Document: IDisposable
             
             string text = texts.ElementAt(i);
             
-            totalSearchedLen += text.Length;
-            
             // in the text where the match starts
-            if (!foundStart && totalSearchedLen >= (match.Index + 1))
+            //if (!foundStart && totalSearchedLen >= (match.Index + 1))
+            if(!foundStart && indexScanned + text.Length >= match.Index)
             {
 
                 matchStartsAtTextIndex = i;
 
-                matchStartsAtStringIndex = (match.Index + 1) - (totalSearchedLen - text.Length) - 1;
+                //matchStartsAtStringIndex = (match.Index + 1) - (totalSearchedLen - text.Length) - 1;
+                matchStartsAtStringIndex = match.Index - (indexScanned + 1);
                 
-
                 foundStart = true;
+                
             } 
             
             // in the text where the match ends
-            if (!foundEnd && totalSearchedLen >= match.Index + match.Length)
+            //if (!foundEnd && totalSearchedLen >= match.Index + match.Length)
+            if(!foundEnd && indexScanned + text.Length >= match.EndIndex())
             {
                 
                 matchEndsAtTextIndex = i;
 
-                matchEndsAtStringIndex = (match.Index + match.Length) - (totalSearchedLen - text.Length) - 1;
+                matchEndsAtStringIndex = match.EndIndex() - (indexScanned + 1);
 
                 foundEnd = true;
+                
             }
 
             if (foundStart && foundEnd)
             {
                 break;
             }
-            
+
+            indexScanned += text.Length;
+
         }
         
-        return [matchStartsAtStringIndex, matchEndsAtStringIndex, matchStartsAtTextIndex, matchEndsAtTextIndex];
-        
+        return new MatchIndices(matchStartsAtTextIndex, matchEndsAtTextIndex, matchStartsAtStringIndex,
+            matchEndsAtStringIndex);
+
     }
 
     private int FindTextElementIndex(Match match, List<Text> textElements, string start)

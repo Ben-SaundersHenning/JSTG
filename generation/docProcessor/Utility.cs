@@ -1,3 +1,6 @@
+using System.Text.RegularExpressions;
+using DocumentFormat.OpenXml.Office2021.OfficeExtLst;
+
 namespace DocProcessor;
 
 public static class Utility
@@ -13,4 +16,10 @@ public static class Utility
       return char.ToLower(s[0]) + s.Substring(1);
    }
     
+}
+
+public static class UtilityExtensions
+{
+   public static int EndIndex(this Match match) => match.Index + match.Length - 1;
+
 }

@@ -283,7 +283,7 @@ INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_na
 INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (10, 'Test Document 5', 'CAT_GOSE', 'CAT_GOSE', 'TD5.docx');
 INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (11, 'Test Document 5', 'MRB', 'MRB', 'TD5.docx');
 INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (12, 'Test Document 5', 'MRB NEB', 'MRB NEB', 'TD5.docx');
-INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (13, 'Test Document 5', 'NEB', 'NEB', 'TD5.docx');
+INSERT INTO public.documents (id, name, user_friendly_name, common_name, file_name) VALUES (13, 'Test Document NEB', 'NEB', 'NEB', 'NEB.dotx');
 
 
 --

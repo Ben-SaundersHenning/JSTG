@@ -12,3 +12,9 @@ obj
 docProcessor/testRunner
 generation/testRunner
 generation/generation.sln.DotSettings.user
+jstg/src-tauri/.env
+test_documents
+ex_max_req.json
+ex_max_req_flat.json
+ex_min_req.json
+ex_neb_req_TEST.json

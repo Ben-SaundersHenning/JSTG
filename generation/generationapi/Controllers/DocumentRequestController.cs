@@ -105,6 +105,11 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
         // 3. otherwise just return the value
         // 4. if the value does not exist, return {ERR: key}
 
+        if (objPath == "")
+        {
+            return "ERR: EMPTY KEY";
+        }
+
         JToken? token = Obj.SelectToken(objPath);
 
         if (token != null)
