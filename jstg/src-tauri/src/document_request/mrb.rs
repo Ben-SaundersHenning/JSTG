@@ -1,5 +1,5 @@
-use serde::{Serialize, Deserialize};
 use chrono::NaiveDate;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]

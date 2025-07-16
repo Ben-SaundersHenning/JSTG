@@ -1,7 +1,7 @@
 use crate::Error;
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use sqlx::{postgres::PgConnection, Connection};
-use chrono::NaiveDate;
 use std::env;
 
 const DB_CONN_STR: &str = "JSTG_DB_POSTGRESQL";
@@ -79,7 +79,6 @@ pub struct Document {
 pub struct ImageData {
     pub file_name: String,
 }
-
 
 // Retrieves the set of documents
 // (name)
@@ -281,8 +280,9 @@ pub async fn get_referral_company(
     Ok(company)
 }
 
-pub async fn get_assessor_signature_file_name(registration_id: &str) -> Result<Option<ImageData>, Error> {
-
+pub async fn get_assessor_signature_file_name(
+    registration_id: &str,
+) -> Result<Option<ImageData>, Error> {
     let mut conn_str: String = String::new();
 
     // dev environment
@@ -307,5 +307,4 @@ pub async fn get_assessor_signature_file_name(registration_id: &str) -> Result<O
     conn.close().await?;
 
     Ok(signature)
-
 }

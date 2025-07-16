@@ -11,8 +11,8 @@ use log4rs::encode::pattern::PatternEncoder;
 use log4rs::Config;
 
 mod db;
-mod fs;
 mod document_request;
+mod fs;
 mod storage;
 mod util;
 
@@ -41,7 +41,6 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
     app_logs.push_str("/logs.log");
 
     // let log_dir_path = Path::new(&tauri::api::path::config_dir().unwrap()).join(app_logs);
-
 
     // Config Dir
     // Linux: $HOME/.config
@@ -75,7 +74,6 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
     info!(target: "app", "JSTG is starting.");
 
     Ok(())
-
 }
 
 // A custom error type that represents all command errors
@@ -95,8 +93,6 @@ pub enum Error {
     DocErr,
     #[error("Error saving file to disk.")]
     WriteErr,
-
-
 }
 
 impl serde::Serialize for Error {
