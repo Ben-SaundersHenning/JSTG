@@ -60,7 +60,7 @@ public class Document: IDisposable
         }
 
         Matcher = new Regex(
-            @"<<(?<tagtype>if|/if|doc|logic||) *\[(?<operand>[ \w\[\]\\/._-]{3,})\](?<flags>[ \w\[\]\\/.:_-]*)>>|<<(?<tagtype>/if)>>",
+            @"<<(?<tagtype>if|/if|image|doc|logic||) *\[(?<operand>[ \w\[\]\\/._-]{3,})\](?<flags>[ \w\[\]\\/.:_-]*)>>|<<(?<tagtype>/if)>>",
             RegexOptions.Compiled);
         
         DirPath = Path.GetDirectoryName(SavePath);
@@ -149,10 +149,10 @@ public class Document: IDisposable
             // They aren't necessary in a single text element,
             // so this function rearranges things so each
             // match is in its own Text Element (by itself).
-            if (para.Descendants<Text>().Count() > 1)
-            {
-                IsolatePatternInParagraph(para);
-            }
+            //if (para.Descendants<Text>().Count() > 1)
+            //{
+            //}
+            IsolatePatternInParagraph(para);
             
             // loop through each text element that has a potential match
             IEnumerable<Text> texts = para!.Descendants<Text>();
@@ -166,8 +166,6 @@ public class Document: IDisposable
                 foreach (Match match in Matcher.Matches(text.Text))
                 {
 
-                    CaptureCollection captures = match.Captures;
-                    
                     string tagType = match.Groups["tagtype"].Value;
                     string operand = match.Groups["operand"].Value;
                     string flags = match.Groups["flags"].Value;
@@ -177,6 +175,7 @@ public class Document: IDisposable
                     switch (tagType.Trim())
                     {
                         
+                        // TODO: WHAT IF THE TAGS ARE NOT IN THE SAME PARAGRAPH?
                        case "if":
                            
                            bool? result = logic.GetRule(operand);
@@ -214,6 +213,11 @@ public class Document: IDisposable
                        case "/if":
                            continue;
                        
+                       case "image":
+                           Drawing img = GetImage(new Image(replacement));
+                           text.InsertAfterSelf(img);
+                           text.Remove();
+                           continue;
                        case "doc":
                            // relative path to parent doc
                            string docPath = operand;
@@ -262,9 +266,9 @@ public class Document: IDisposable
                         switch (allSwitches.FindLast(s => s[0] == 'p'))
                         {
                            case "p0":
-                               if (replacement == "Male") { replacement = "mr."; }
-                               else if (replacement == "Female") { replacement = "ms."; }
-                               else { replacement = "mx."; }
+                               if (replacement == "Male") { replacement = "mr"; }
+                               else if (replacement == "Female") { replacement = "ms"; }
+                               else { replacement = "mx"; }
                                break;
                            case "p1":
                                if (replacement == "Male") { replacement = "male"; }
@@ -416,7 +420,21 @@ public class Document: IDisposable
         
         //t.Remove();
 
-    } 
+    }
+
+    public Drawing GetImage(Image image)
+    {
+        
+        ImagePart imagePart = MainPart!.AddImagePart(ImagePartType.Png); //static png for now
+        
+        using (FileStream stream = new FileStream(image.File, FileMode.Open))
+        {
+            imagePart.FeedData(stream);
+        }
+
+        return GetImageElement(image, MainPart!.GetIdOfPart(imagePart));
+        
+    }
     
     public void ReplaceTextWithImage(string text, Image image)
     {

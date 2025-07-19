@@ -12,14 +12,10 @@ public class DocumentLogic: IDocumentLogic
     public DocumentLogic(DocumentRequest _data)
     {
         // CLAIMANT IS MALE OR FEMALE
-        if (_data.claimant.gender == "Male")
-        {
-            rules.Add("isMale", true);
-        }
-        else
-        {
-            rules.Add("isMale", false);
-        }
+        rules.Add("isMale", _data.claimant.gender == "Male");
+        rules.Add("isFemale", _data.claimant.gender == "Female");
+        
+        rules.Add("isYouth", _data.claimant.youth is true);
         
     }
 

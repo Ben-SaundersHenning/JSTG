@@ -12,12 +12,17 @@ using Document = DocProcessor.Document;
 
 namespace generationapi.Controllers;
 
-public class DocumentRequestController(IConfiguration configuration) : Controller
+public class DocumentRequestController : Controller
 {
     
     private JObject Obj { get; set; } = new();
 
-    private readonly IConfiguration Configuration = configuration;
+    private readonly IConfiguration _configuration;
+
+    public DocumentRequestController(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
 
     [HttpPost("DocRequest")]
     public IActionResult DocRequest([FromBody] DocumentRequest data)
@@ -29,6 +34,10 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
         }
 
         DocumentLogic logic = new(data);
+        
+        // fix image path (TEMP)
+        string imgPaths = _configuration["ImagesPath"];
+        data.signatureFileName = imgPaths + data.signatureFileName;
         
         DefaultContractResolver contractResolver = new DefaultContractResolver
         {
@@ -58,7 +67,7 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
         
         //TODO: check if doc exists
 
-        string filePaths = configuration["TemplatesPath"];
+        string filePaths = _configuration["TemplatesPath"];
         string docFileName = (string)data.SelectToken("document.file_name");
 
         Document doc = new Document(filePaths + docFileName, DocumentType.ExistingDocument);
@@ -71,14 +80,10 @@ public class DocumentRequestController(IConfiguration configuration) : Controlle
         
         //TODO: check if image exists
         
-        string imgPaths = configuration["ImagesPath"];
-        string imgFileName = (string)data.SelectToken("signature_file_name");
         
         // 4. Insert image into document
         
         //image replace has to be done first, since the tag matches the text replacement tags.
-        Image image = new(imgPaths + imgFileName);
-        doc.ReplaceTextWithImage("<assessor.signature>", image); 
         
         // 5. Replace all tags
         
