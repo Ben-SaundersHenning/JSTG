@@ -57,6 +57,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.assessment_types (
     id integer NOT NULL,
+    is_active boolean NOT NULL DEFAULT true,
     name text,
     common_name text
 );
@@ -92,6 +93,7 @@ ALTER SEQUENCE public.assessment_types_id_seq OWNED BY public.assessment_types.i
 
 CREATE TABLE public.assessors (
     registration_id character(8) NOT NULL,
+    is_active boolean NOT NULL DEFAULT true,
     first_name text NOT NULL,
     last_name text NOT NULL,
     gender public.gender NOT NULL,
@@ -181,6 +183,7 @@ ALTER SEQUENCE public.images_id_seq OWNED BY public.images.id;
 
 CREATE TABLE public.referral_companies (
     id integer NOT NULL,
+    is_active boolean NOT NULL DEFAULT true,
     name text NOT NULL,
     common_name text NOT NULL,
     street_address text NOT NULL,
