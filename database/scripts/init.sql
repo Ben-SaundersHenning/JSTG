@@ -13,8 +13,8 @@ SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
 SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
-SELECT pg_catalog.set_config('search_path', '', false);
-SET check_function_bodies = false;
+SELECT pg_catalog.set_config('search_path', '', FALSE);
+SET check_function_bodies = FALSE;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
@@ -57,7 +57,7 @@ SET default_table_access_method = heap;
 
 CREATE TABLE public.assessment_types (
     id integer NOT NULL,
-    is_active boolean NOT NULL DEFAULT true,
+    is_active boolean NOT NULL DEFAULT TRUE,
     name text,
     common_name text
 );
@@ -93,7 +93,7 @@ ALTER SEQUENCE public.assessment_types_id_seq OWNED BY public.assessment_types.i
 
 CREATE TABLE public.assessors (
     registration_id character(8) NOT NULL,
-    is_active boolean NOT NULL DEFAULT true,
+    is_active boolean NOT NULL DEFAULT TRUE,
     first_name text NOT NULL,
     last_name text NOT NULL,
     gender public.gender NOT NULL,
@@ -183,7 +183,7 @@ ALTER SEQUENCE public.images_id_seq OWNED BY public.images.id;
 
 CREATE TABLE public.referral_companies (
     id integer NOT NULL,
-    is_active boolean NOT NULL DEFAULT true,
+    is_active boolean NOT NULL DEFAULT TRUE,
     name text NOT NULL,
     common_name text NOT NULL,
     street_address text NOT NULL,
@@ -265,9 +265,9 @@ INSERT INTO public.assessment_types (id, name, common_name) VALUES (3, 'Assessme
 
 INSERT INTO public.assessors (registration_id, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G1234569', 'Frodo', 'Baggins', 'male', 'frodo@lotr.com', 'Ring Bearer');
 INSERT INTO public.assessors (registration_id, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G1234559', 'Bilbo', 'Baggins', 'male', 'bilbo@lotr.com', 'Ring Bearer');
-INSERT INTO public.assessors (registration_id, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G6543219', 'Tom', 'Bombadil', 'male', 'tom@lotr.com', 'Yellow Boots');
+INSERT INTO public.assessors (registration_id, is_active, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G6543219', FALSE, 'Tom', 'Bombadil', 'male', 'tom@lotr.com', 'Yellow Boots');
 INSERT INTO public.assessors (registration_id, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G1597539', 'Goldberry', 'River-daughter', 'female', 'goldberry@lotr.com', 'lilies');
-INSERT INTO public.assessors (registration_id, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G1597535', 'Treebeard', 'Fangorn', 'other', 'treebeard@lotr.com', 'Fangorn Forest');
+INSERT INTO public.assessors (registration_id, is_active, first_name, last_name, gender, email, qualifications_paragraph) VALUES ('G1597535', FALSE, 'Treebeard', 'Fangorn', 'other', 'treebeard@lotr.com', 'Fangorn Forest');
 
 
 --
@@ -311,28 +311,28 @@ INSERT INTO public.referral_companies (id, name, common_name, street_address, un
 -- Name: assessment_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: jstg
 --
 
-SELECT pg_catalog.setval('public.assessment_types_id_seq', 3, true);
+SELECT pg_catalog.setval('public.assessment_types_id_seq', 3, TRUE);
 
 
 --
 -- Name: documents_id_seq; Type: SEQUENCE SET; Schema: public; Owner: jstg
 --
 
-SELECT pg_catalog.setval('public.documents_id_seq', 13, true);
+SELECT pg_catalog.setval('public.documents_id_seq', 13, TRUE);
 
 
 --
 -- Name: images_id_seq; Type: SEQUENCE SET; Schema: public; Owner: jstg
 --
 
-SELECT pg_catalog.setval('public.images_id_seq', 1, true);
+SELECT pg_catalog.setval('public.images_id_seq', 1, TRUE);
 
 
 --
 -- Name: referral_companies_id_seq; Type: SEQUENCE SET; Schema: public; Owner: jstg
 --
 
-SELECT pg_catalog.setval('public.referral_companies_id_seq', 2, true);
+SELECT pg_catalog.setval('public.referral_companies_id_seq', 2, TRUE);
 
 
 --

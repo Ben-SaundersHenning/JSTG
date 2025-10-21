@@ -80,8 +80,11 @@ pub struct ImageData {
     pub file_name: String,
 }
 
+
 // Retrieves the set of documents
 // (name)
+// FIX: this should depend on the assessment_types table,
+// then documents for the active types should be fetched
 #[tauri::command]
 pub async fn get_document_options() -> Result<JsonListing, Error> {
     let mut conn_str: String = String::new();
@@ -163,7 +166,8 @@ pub async fn get_assessor_options() -> Result<JsonListing, Error> {
                     'name', a.first_name || ' ' || a.last_name,
                     'id', trim(a.registration_id)
                     )) as listing_details
-                 FROM \"assessors\" a;";
+                 FROM \"assessors\" a
+                 WHERE is_active;";
 
     let assessors = sqlx::query_as::<_, JsonListing>(query)
         .fetch_one(&mut conn)
@@ -228,7 +232,8 @@ pub async fn get_referral_company_options() -> Result<JsonListing, Error> {
                     'name', rc.common_name,
                     'id', rc.id
                     )) as listing_details
-                 FROM \"referral_companies\" rc;";
+                 FROM \"referral_companies\" rc
+                 WHERE is_active;";
 
     let companies = sqlx::query_as::<_, JsonListing>(query)
         .fetch_one(&mut conn)
