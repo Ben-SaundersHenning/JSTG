@@ -37,9 +37,11 @@ impl Settings {
                     // insert each setting into the hashmap
                     for line in fs::read_to_string(settings_file_path).unwrap().lines() {
                         let key_vals: Vec<&str> = line.split("=").map(|x| x.trim()).collect();
-                        settings
-                            .settings
-                            .insert(key_vals[0].to_string(), key_vals[1].to_string());
+                        if !key_vals.is_empty() && key_vals.len() >= 2 {
+                            settings
+                                .settings
+                                .insert(key_vals[0].to_string(), key_vals[1].to_string());
+                        }
                     }
 
                     info!(target: "app", "Loaded the existing configuration file.");
