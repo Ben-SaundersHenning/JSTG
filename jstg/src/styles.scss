@@ -18,7 +18,7 @@ input {
     font-size: 1.15rem;
 }
 
-fieldset {
+.doc-gen-card {
 
   box-sizing: border-box;
   border: 5px double variables.$secondary-color;
@@ -29,7 +29,7 @@ fieldset {
   overflow: wrap;
   margin: 30px auto 0 auto;
 
-  legend {
+  .card-title {
 
     position: relative;
     box-sizing: border-box;
@@ -42,6 +42,20 @@ fieldset {
 
   }
 
+}
+
+.radio-fieldset {
+    border: none;
+    padding: 0;
+    margin: 0;
+    min-width: 0; // Prevents fieldset from expanding
+
+    legend {
+        padding: 0;
+        float: left; // Keeps it in the vertical flow
+        width: 100%; // Makes it take full width like other labels
+        margin-bottom: 5px; // Same spacing as other labels
+    }
 }
 
 .horizontal-input {
@@ -79,11 +93,17 @@ fieldset {
 
 }
 
+/* TODO: get rid of the disabled classes and instead select by disabled elements */
 .disabled-input {
   color: gray !important;
 }
 
+/* TODO: remove this class */
 .input-label {
+    margin: 0px 5px 5px 0px;
+}
+
+.vertical-margin {
     margin: 0px 5px 5px 0px;
 }
 

@@ -190,9 +190,9 @@
 <template>
     <form @submit="onSubmit">
 
-        <fieldset>
+        <fieldset class="doc-gen-card">
 
-            <legend>Assessment Information</legend>
+            <legend class="card-title">Assessment Information</legend>
             <div class="assessment-inputs">
                 <div class="assessor-input vertical-input">
                     <p class="input-label">Assessor</p>
@@ -240,35 +240,55 @@
 
         </fieldset>
 
-        <fieldset>
-            <legend>Client Information</legend>
+        <fieldset class="doc-gen-card">
+            <legend class="card-title">Client Information</legend>
             <div class="client-inputs">
                 <div class="firstname-input vertical-input">
-                    <p class="input-label">First Name</p>
-                    <input aria-label="First Name" id="fname-input" class="input-border" type="text" name="fname" v-model="clFirstName" :="clFirstNameAtrb"/>
+                    <label for="fname-input" class="vertical-margin">First Name</label>
+                    <input id="fname-input" class="input-border" type="text" name="fname" v-model="clFirstName" :="clFirstNameAtrb"/>
                     <span class="error">{{errors['claimant.firstName']}}</span>
                 </div>
 
                 <div class="lastname-input vertical-input">
-                    <p class="input-label">Last Name</p>
+                    <label for="lname-input" class="vertical-margin">Last Name</label>
                     <input aria-label="Last Name" id="lname-input" class="input-border" type="text" name="lname"
                                    v-model="clLastName" :="clLastNameAtrb"/>
                     <span class="error">{{errors['claimant.lastName']}}</span>
                 </div>
 
                 <div class="gender-input vertical-input">
-                    <p class="input-label">Gender</p>
-                    <div class="horizontal-input input-border">
-                        <input type="radio" id="male" name="gender" value="Male"
-                                   v-model="clGender" :="clGenderAtrb"/>
-                        <label for="male">Male</label><br>
-                        <input type="radio" id="female" name="gender" value="Female"
-                                   v-model="clGender" :="clGenderAtrb"/>
-                        <label for="female">Female</label><br>
-                        <input type="radio" id="other" name="gender" value="Other"
-                                   v-model="clGender" :="clGenderAtrb"/>
-                        <label for="other">Other</label><br>
-                    </div>
+                    <!-- <p class="input-label">Gender</p> -->
+                    <!-- <div class="horizontal-input input-border"> -->
+                    <!--     <input type="radio" id="male" name="gender" value="Male" -->
+                    <!--                v-model="clGender" :="clGenderAtrb"/> -->
+                    <!--     <label for="male">Male</label><br> -->
+                    <!--     <input type="radio" id="female" name="gender" value="Female" -->
+                    <!--                v-model="clGender" :="clGenderAtrb"/> -->
+                    <!--     <label for="female">Female</label><br> -->
+                    <!--     <input type="radio" id="other" name="gender" value="Other" -->
+                    <!--                v-model="clGender" :="clGenderAtrb"/> -->
+                    <!--     <label for="other">Other</label><br> -->
+                    <!-- </div> -->
+                  <fieldset class="radio-fieldset">
+                        <legend class="input-label">Gender</legend>
+                        <div class="horizontal-input input-border">
+                            <label class="radio-option">
+                                <input type="radio" name="gender" value="Male"
+                                       v-model="clGender" v-bind="clGenderAtrb"/>
+                                Male
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="gender" value="Female"
+                                       v-model="clGender" v-bind="clGenderAtrb"/>
+                                Female
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="gender" value="Other"
+                                       v-model="clGender" v-bind="clGenderAtrb"/>
+                                Other
+                            </label>
+                        </div>
+                      </fieldset>
                     <span class="error">{{errors['claimant.gender']}}</span>
                 </div>
 
@@ -337,8 +357,8 @@
             </div>
         </fieldset>
 
-        <fieldset>
-            <legend>Insurance Information</legend>
+        <fieldset class="doc-gen-card">
+            <legend class="card-title">Insurance Information</legend>
             <div class="insurance-inputs">
                 <div class="company-input vertical-input">
                     <p class="input-label">Insurance Company</p>
@@ -362,8 +382,8 @@
             </div>
         </fieldset>
 
-        <fieldset v-if="includeAC">
-            <legend>Attendant Care Benefits</legend>
+        <fieldset v-if="includeAC" class="doc-gen-card">
+            <legend class="card-title">Attendant Care Benefits</legend>
             <div class="ac-inputs">
                 <div class="first-assessment-input vertical-input">
                     <p class="input-label">Is there a previous Form 1?</p>
@@ -405,8 +425,8 @@
             </div>
         </fieldset>
 
-        <fieldset v-if="includeCAT">
-            <legend>Catastrophic Impairment</legend>
+        <fieldset v-if="includeCAT" class="doc-gen-card">
+            <legend class="card-title">Catastrophic Impairment</legend>
             <div class="cat-inputs">
 
                 <div class="do-ocf19-input vertical-input">
@@ -429,8 +449,8 @@
             </div>
         </fieldset>
 
-        <fieldset v-if="includeMRB">
-            <legend>Medical Rehabilitation Benefits</legend>
+        <fieldset v-if="includeMRB" class="doc-gen-card">
+            <legend class="card-title">Medical Rehabilitation Benefits</legend>
             <div class="mrb-inputs">
 
                 <div class="do-ocf18-input vertical-input">
