@@ -1,5 +1,6 @@
 using common.Interfaces;
 using DocumentFormat.OpenXml.Office.Word;
+using DocumentFormat.OpenXml.Presentation;
 using Newtonsoft.Json.Linq;
 
 namespace DocProcessor;
@@ -18,6 +19,7 @@ internal readonly record struct MatchIndices(int ElementIndex, int ElementEndInd
 
 internal record struct PositionInfo(
     int Index,
+    char c, // TODO: remove this
     Text TextNode,
     Run RunNode,
     Paragraph ParaNode,
@@ -534,12 +536,36 @@ public class Document: IDisposable
         SearchAndReplace(pattern, getReplacementString, null, true); //regex replace
     }
 
-    
     // Isolates the Matcher pattern within the Body of the document.
     // Matches can span paragraphs.
-    private void IsolatePatternInBody()
+    public void IsolatePatternInBody()
     {
         
+        //1. Flatten entire document text content into a single string
+        
+        Text[] texts = Body.Descendants<Text>() as Text[] ?? Body.Descendants<Text>().ToArray();
+        List<PositionInfo> indexMap = new();
+
+        int curIndex = 0;
+        for (int i = 0; i < texts.Length; i++)
+        {
+            
+            Text text = texts[i];
+            Run run = text.Parent as Run;
+            Paragraph para = run.Parent as Paragraph;
+            String str = text.Text;
+
+            for (int j = 0; j < str.Length; j++)
+            {
+                // There are text nodes that can have a Text that is an empty string in between paragraphs.
+                // May need to handle these so that matches are found across these spaces.
+               char c = str[j]; 
+               PositionInfo info = new(Index: curIndex++, c: c, TextNode: text, RunNode: run, ParaNode: para, LocalOffset: j);
+               indexMap.Add(info);
+            }
+            
+        }
+
     }
 
     // TODO: rewrite this
