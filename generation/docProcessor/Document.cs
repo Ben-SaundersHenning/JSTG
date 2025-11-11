@@ -1,3 +1,4 @@
+using System.Text;
 using common.Interfaces;
 using DocumentFormat.OpenXml.Office.Word;
 using DocumentFormat.OpenXml.Presentation;
@@ -545,6 +546,7 @@ public class Document: IDisposable
         
         Text[] texts = Body.Descendants<Text>() as Text[] ?? Body.Descendants<Text>().ToArray();
         List<PositionInfo> indexMap = new();
+        StringBuilder bodyStr = new();
 
         int curIndex = 0;
         for (int i = 0; i < texts.Length; i++)
@@ -563,8 +565,13 @@ public class Document: IDisposable
                PositionInfo info = new(Index: curIndex++, c: c, TextNode: text, RunNode: run, ParaNode: para, LocalOffset: j);
                indexMap.Add(info);
             }
-            
+
+            bodyStr.Append(str);
+
         }
+        
+        // For each match in bodyStr, index it from the info list
+        // do the replacements as necessary, take from the below function.
 
     }
 
