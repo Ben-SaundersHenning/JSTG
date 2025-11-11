@@ -16,6 +16,14 @@ using PIC = DocumentFormat.OpenXml.Drawing.Pictures;
 
 internal readonly record struct MatchIndices(int ElementIndex, int ElementEndIndex, int StringIndex, int StringEndIndex);
 
+internal record struct PositionInfo(
+    int Index,
+    Text TextNode,
+    Run RunNode,
+    Paragraph ParaNode,
+    int LocalOffset
+);
+
 public enum DocumentType
 {
     NewDocument,
@@ -124,6 +132,8 @@ public class Document: IDisposable
         return null;
     }
 
+    // TODO: completely rewrite this. Documents should be processed twice, and cached after the first process. 
+    
     // Evaluates all tags matching the <<[]>> syntax inside the document.
     public void ProcessDocument(Func<string, string>? getReplacementString, JObject data, IDocumentLogic logic)
     {
@@ -524,6 +534,16 @@ public class Document: IDisposable
         SearchAndReplace(pattern, getReplacementString, null, true); //regex replace
     }
 
+    
+    // Isolates the Matcher pattern within the Body of the document.
+    // Matches can span paragraphs.
+    private void IsolatePatternInBody()
+    {
+        
+    }
+
+    // TODO: rewrite this
+    
     // A paragraph has a number of run elements which each can have a number
     // of text elements. This function takes every 'pattern' match in the paragraph,
     // and ensures that it is isolated into its own Run element.
