@@ -190,23 +190,52 @@
 <template>
     <form @submit="onSubmit">
 
+                <!-- <div class="gender-input vertical-input"> -->
+                <!--     <fieldset class="radio-fieldset"> -->
+                <!--         <legend class="input-label">Gender</legend> -->
+                <!--         <div class="horizontal-input input-border"> -->
+                <!--             <label class="radio-option"> -->
+                <!--                 <input type="radio" name="gender" value="Male" -->
+                <!--                        v-model="clGender" v-bind="clGenderAtrb"/> -->
+                <!--                 Male -->
+                <!--             </label> -->
+                <!--             <label class="radio-option"> -->
+                <!--                 <input type="radio" name="gender" value="Female" -->
+                <!--                        v-model="clGender" v-bind="clGenderAtrb"/> -->
+                <!--                 Female -->
+                <!--             </label> -->
+                <!--             <label class="radio-option"> -->
+                <!--                 <input type="radio" name="gender" value="Other" -->
+                <!--                        v-model="clGender" v-bind="clGenderAtrb"/> -->
+                <!--                 Other -->
+                <!--             </label> -->
+                <!--         </div> -->
+                <!--     </fieldset> -->
+                <!--     <span class="error">{{errors['claimant.gender']}}</span> -->
+                <!-- </div> -->
+
         <fieldset class="doc-gen-card">
 
             <legend class="card-title">Assessment Information</legend>
+
+
             <div class="assessment-inputs">
                 <div class="assessor-input vertical-input">
-                    <p class="input-label">Assessor</p>
-                    <div class="horizontal-input input-border">
-                        <span v-for="(assessor, index) in assessors">
-                            <input type="radio" name="assessor" :id="'assessor' + assessor.id" :value="assessor.id"
-                                   v-model="asrRegistrationId" :="asrRegistrationIdAtrb"/>
-                            <label :for="'assessor' + assessor.id">{{assessor.name}}</label>
-                        </span>
-                    </div>
+                    <fieldset class="radio-fieldset">
+                        <legend class="input-label">Assessor</legend>
+                        <div class="horizontal-input input-border">
+                            <label v-for="(assessor, index) in assessors" :for="'assessor' + assessor.id" class="radio-option">
+                                <input type="radio" name="assessor" :id="'assessor' + assessor.id" :value="assessor.id"
+                                       v-model="asrRegistrationId" :="asrRegistrationIdAtrb"/>
+                                    {{assessor.name}}
+                                <!-- <label :for="'assessor' + assessor.id">{{assessor.name}}</label> -->
+                            </label>
+                        </div>
+                    </fieldset>
                     <span class="error">{{errors['assessorRegistrationId']}}</span>
                 </div>
                 <div class="document-input vertical-input">
-                    <p class="input-label">Type</p>
+                    <label class="input-label">Type</label>
                     <div class="checkboxes input-border">
                         <span v-for="(document, index) in documents">
                             <input type="radio" name="document" :id="'document' + document.id" :value="document.id"
@@ -217,7 +246,7 @@
                     <span class="error">{{errors['documentId']}}</span>
                 </div>
                 <div class="company-input vertical-input">
-                    <p class="input-label">Referral Company</p>
+                    <label class="input-label">Referral Company</label>
                     <div class="checkboxes company input-border">
                         <span v-for="(company, index) in referral_companies">
                             <input type="radio" name="company" :id="'company' + company.id" :value="company.id"
@@ -228,7 +257,7 @@
                     <span class="error">{{errors['referralCompanyId']}}</span>
                 </div>
                 <div class="date-of-assessment-input vertical-input">
-                    <p class="input-label">Date of Assessment</p>
+                    <label class="input-label">Date of Assessment</label>
                     <div class="date-input">
                         <input aria-label="Date of Assessment" id="doa-input"  type="text" name="doa"
                                        v-model="doAssessment" :="doAssessmentAtrb"/>
@@ -257,19 +286,7 @@
                 </div>
 
                 <div class="gender-input vertical-input">
-                    <!-- <p class="input-label">Gender</p> -->
-                    <!-- <div class="horizontal-input input-border"> -->
-                    <!--     <input type="radio" id="male" name="gender" value="Male" -->
-                    <!--                v-model="clGender" :="clGenderAtrb"/> -->
-                    <!--     <label for="male">Male</label><br> -->
-                    <!--     <input type="radio" id="female" name="gender" value="Female" -->
-                    <!--                v-model="clGender" :="clGenderAtrb"/> -->
-                    <!--     <label for="female">Female</label><br> -->
-                    <!--     <input type="radio" id="other" name="gender" value="Other" -->
-                    <!--                v-model="clGender" :="clGenderAtrb"/> -->
-                    <!--     <label for="other">Other</label><br> -->
-                    <!-- </div> -->
-                  <fieldset class="radio-fieldset">
+                    <fieldset class="radio-fieldset">
                         <legend class="input-label">Gender</legend>
                         <div class="horizontal-input input-border">
                             <label class="radio-option">
@@ -288,12 +305,12 @@
                                 Other
                             </label>
                         </div>
-                      </fieldset>
+                    </fieldset>
                     <span class="error">{{errors['claimant.gender']}}</span>
                 </div>
 
                 <div class="dob-input vertical-input">
-                    <p class="input-label">Date of Birth</p>
+                    <label class="input-label">Date of Birth</label>
                     <div class="date-input">
                         <input aria-label="Date of Birth" id="dob-input" class="input-border" type="text" name="dob"
                                        v-model="clDoBirth" :="clDoBirthAtrb"/>
@@ -303,7 +320,7 @@
                 </div>
 
                 <div class="dol-input vertical-input">
-                    <p class="input-label">Date of Loss</p>
+                    <label class="input-label">Date of Loss</label>
                     <div class="date-input">
                         <input aria-label="Date of Loss" id="dol-input" class="input-border" type="text" name="dol"
                                        v-model="clDoLoss" :="clDoLossAtrb"/>
@@ -313,42 +330,42 @@
                 </div>
 
                 <div class="street-input vertical-input">
-                    <p class="input-label">Street Address</p>
+                    <label class="input-label">Street Address</label>
                     <input aria-label="Street Address" id="street-address-input" class="input-border" type="text" name="address"
                                    v-model="clAddStreetAddress" :="clAddStreetAddressAtrb"/>
                     <span class="error">{{errors['claimant.address.streetAddress']}}</span>
                 </div>
 
                 <div class="apt-input vertical-input">
-                    <p class="input-label">Apt, Suite, etc</p>
+                    <label class="input-label">Apt, Suite, etc</label>
                     <input aria-label="Apt, Suite, etc" id="unit-input" class="input-border" type="text" name="unit"
                                    v-model="clAddUnit" :="clAddUnitAtrb"/>
                     <span class="error">{{errors['claimant.address.unit']}}</span>
                 </div>
 
                 <div class="city-input vertical-input">
-                    <p class="input-label">City</p>
+                    <label class="input-label">City</label>
                     <input aria-label="City" id="city-input" class="input-border" type="text" name="city"
                                    v-model="clAddCity" :="clAddCityAtrb"/>
                     <span class="error">{{errors['claimant.address.city']}}</span>
                 </div>
 
                 <div class="province-input vertical-input">
-                    <p class="input-label">Province</p>
+                    <label class="input-label">Province</label>
                     <input aria-label="Province" id="province-input" class="input-border" type="text" name="province"
                                    v-model="clAddProvince" :="clAddProvinceAtrb"/>
                     <span class="error">{{errors['claimant.address.province']}}</span>
                 </div>
 
                 <div class="country-input vertical-input">
-                    <p class="input-label">Country</p>
+                    <label class="input-label">Country</label>
                     <input aria-label="Country" id="country-input" class="input-border" type="text" name="country"
                                    v-model="clAddCountry" :="clAddCountryAtrb"/>
                     <span class="error">{{errors['claimant.address.country']}}</span>
                 </div>
 
                 <div class="postal-code-input vertical-input">
-                    <p class="input-label">Postal Code</p>
+                    <label class="input-label">Postal Code</label>
                     <input aria-label="Postal Code" id="postal-code-input" class="input-border" type="text" name="postal-code"
                                    v-model="clAddPostalCode" :="clAddPostalCodeAtrb"/>
                     <span class="error">{{errors['claimant.address.postalCode']}}</span>
@@ -361,20 +378,20 @@
             <legend class="card-title">Insurance Information</legend>
             <div class="insurance-inputs">
                 <div class="company-input vertical-input">
-                    <p class="input-label">Insurance Company</p>
+                    <label class="input-label">Insurance Company</label>
                     <input aria-label="Insurance Company" id="insurance-company-input" class="input-border" type="text" name="insurance-company" 
                            v-model="insuranceCompany" :="insuranceCompanyAtrb"/>
                     <span class="error">{{errors['insuranceCompany']}}</span>
                 </div>
 
                 <div class="adjuster-input vertical-input">
-                    <p class="input-label">Adjuster</p>
+                    <label class="input-label">Adjuster</label>
                     <input aria-label="Adjuster" id="adjuster-input" class="input-border" type="text" name="adjuster" v-model="adjuster" :="adjusterAtrb"/>
                     <span class="error">{{errors['adjuster']}}</span>
                 </div>
 
                 <div class="claim-number-input vertical-input">
-                    <p class="input-label">Claim Number</p>
+                    <label class="input-label">Claim Number</label>
                     <input aria-label="Claim Number" id="claim-number-input" class="input-border" type="text" name="claim-number"
                                    v-model="claimNumber" :="claimNumberAtrb"/>
                     <span class="error">{{errors['claimNumber']}}</span>
@@ -386,7 +403,7 @@
             <legend class="card-title">Attendant Care Benefits</legend>
             <div class="ac-inputs">
                 <div class="first-assessment-input vertical-input">
-                    <p class="input-label">Is there a previous Form 1?</p>
+                    <label class="input-label">Is there a previous Form 1?</label>
                     <div class="checkboxes input-border">
                         <span>
                             <input type="radio" id="first-assessment-input-yes" name="first-assessment" :value="true"
@@ -403,7 +420,7 @@
                 </div>
 
                 <div class="dola-input vertical-input">
-                    <p :class="{ 'input-label': acFirstAssessment, 'disabled-input-label': !acFirstAssessment }">Date of Last Assessment</p>
+                    <label :class="{ 'input-label': acFirstAssessment, 'disabled-input-label': !acFirstAssessment }">Date of Last Assessment</label>
                     <div class="date-input" >
                         <input aria-label="Date of Last Assessment" id="dola-input"  type="text" name="dola" :style="[!acFirstAssessment ? 'color: gray' : '']"
                                        v-model="acDateOfLastAssessment" :="acDateOfLastAssessmentAtrb" :disabled="!acFirstAssessment"/>
@@ -416,7 +433,7 @@
                 </div>
 
                 <div class="monthly-allowance-input vertical-input">
-                    <p :class="{ 'input-label': acFirstAssessment, 'disabled-input-label': !acFirstAssessment }">Monthly Allowance</p>
+                    <label :class="{ 'input-label': acFirstAssessment, 'disabled-input-label': !acFirstAssessment }">Monthly Allowance</label>
                     <input aria-label="monthly-allowance" id="monthly-allowance-input" class="input-border" type="text" name="monthly-allowance" :style="[!acFirstAssessment ? 'color: gray' : '']"
                                         v-model="acMonthlyAllowance" :="acMonthlyAllowanceAtrb" :disabled="!acFirstAssessment"/>
                     <span v-if="acFirstAssessment" class="error">{{errors['ac.monthlyAllowance']}}</span>
@@ -430,7 +447,7 @@
             <div class="cat-inputs">
 
                 <div class="do-ocf19-input vertical-input">
-                    <p class="input-label">Date of OCF19</p>
+                    <label class="input-label">Date of OCF19</label>
                     <div class="date-input">
                         <input aria-label="Date of OCF19" id="do-ocf19-input"  type="text" name="do-ocf19"
                                 v-model="catDateOfOcf19" :="catDateOfOcf19Atrb"/>
@@ -440,7 +457,7 @@
                 </div>
 
                 <div class="cat-assessor-input vertical-input">
-                    <p class="input-label">Assessor</p>
+                    <label class="input-label">Assessor</label>
                     <input aria-label="Assessor" id="cat-assessor-input" class="input-border" type="text" name="cat-assessor"
                             v-model="catAssessor" :="catAssessorAtrb"/>
                     <span class="error">{{errors['cat.assessor']}}</span>
@@ -454,7 +471,7 @@
             <div class="mrb-inputs">
 
                 <div class="do-ocf18-input vertical-input">
-                    <p class="input-label">Date of OCF18</p>
+                    <label class="input-label">Date of OCF18</label>
                     <div class="date-input">
                         <input aria-label="Date of OCF18" id="do-ocf18-input"  type="text" name="do-ocf18"
                                 v-model="mrbDateOfOcf18" :="mrbDateOfOcf18Atrb"/>
@@ -464,14 +481,14 @@
                 </div>
 
                 <div class="mrb-assessor-input vertical-input">
-                    <p class="input-label">Assessor</p>
+                    <label class="input-label">Assessor</label>
                     <input aria-label="Assessor" id="mrb-assessor-input" class="input-border" type="text" name="mrb-assessor"
                             v-model="mrbAssessor" :="mrbAssessorAtrb"/>
                     <span class="error">{{errors['mrb.assessor']}}</span>
                 </div>
 
                 <div class="ocf18-amount-input vertical-input">
-                    <p class="input-label">Amount of OCF18</p>
+                    <label class="input-label">Amount of OCF18</label>
                     <input aria-label="Amount of OCF18" id="ocf18-amount-input" class="input-border" type="text" name="ocf18-amount"
                             v-model="mrbAmountOfOcf18" :="mrbAmountOfOcf18Atrb"/>
                     <span class="error">{{errors['mrb.amountOfOcf18']}}</span>
