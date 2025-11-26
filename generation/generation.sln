@@ -1,12 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docProcessor", "docProcessor\docProcessor.csproj", "{C54BEB8C-49A5-4F04-86BA-12FD3FA5FEB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docProcessorOld", "docProcessorOld\docProcessorOld.csproj", "{C54BEB8C-49A5-4F04-86BA-12FD3FA5FEB0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "generationapi", "generationapi\generationapi.csproj", "{A7B36808-E026-44B1-B74F-39A8E2E8761C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "testRunner", "testRunner\testRunner.csproj", "{2E2D51AD-4E91-4424-AC62-3AD44454EFB0}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "common", "common\common.csproj", "{E0044384-EFE3-4C3C-AA01-BDBFB427F466}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "docProcessor", "docProcessor\docProcessor.csproj", "{D33BAAF7-2D19-4DD2-8831-541967F16751}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -46,5 +48,9 @@ Global
 		{E0044384-EFE3-4C3C-AA01-BDBFB427F466}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0044384-EFE3-4C3C-AA01-BDBFB427F466}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0044384-EFE3-4C3C-AA01-BDBFB427F466}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D33BAAF7-2D19-4DD2-8831-541967F16751}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D33BAAF7-2D19-4DD2-8831-541967F16751}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D33BAAF7-2D19-4DD2-8831-541967F16751}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D33BAAF7-2D19-4DD2-8831-541967F16751}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

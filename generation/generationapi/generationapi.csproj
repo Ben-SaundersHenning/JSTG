@@ -14,7 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\docProcessor\docProcessor.csproj" />
+      <ProjectReference Include="..\docProcessorOld\docProcessorOld.csproj" />
     </ItemGroup>
 
 </Project>
