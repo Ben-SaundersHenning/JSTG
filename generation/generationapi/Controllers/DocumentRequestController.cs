@@ -6,6 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using DocKit;
+using DocKit.TemplateEngine;
+using Document = DocKit.Document;
 
 namespace generationapi.Controllers;
 
@@ -15,7 +18,7 @@ public class DocumentRequestController : Controller
     private JObject Obj { get; set; } = new();
 
     private readonly IConfiguration _configuration;
-
+    
     public DocumentRequestController(IConfiguration configuration)
     {
         _configuration = configuration;
@@ -29,7 +32,10 @@ public class DocumentRequestController : Controller
         {
             return BadRequest();
         }
-
+        
+        var json = JsonConvert.SerializeObject(data);
+        Obj = JObject.Parse(json); 
+        
        // DocumentLogic logic = new(data);
        // 
        // // fix image path (TEMP)
@@ -48,9 +54,20 @@ public class DocumentRequestController : Controller
        // }));
        //     
        // byte[] result = GenerateDocument(Obj, logic, TagReplace);
+       
+       string filePaths = _configuration["TemplatesPath"];
 
-       byte[] result = new byte[5];
-            
+       Document doc = Document.Open("/Users/ben/Projects/DocKit/Documents_Testing/template_engine/tags.docx");
+        
+       TemplateEngine eng = new TemplateEngine();
+       eng.RunEngine(doc, ReplaceFunc);
+        
+       Stream docStream = doc.SaveAsStream();
+
+       using MemoryStream ms = new();
+       docStream.CopyTo(ms);
+       byte[] result = ms.ToArray();
+       
         return new FileContentResult(result, "application/octet-stream");
             
     }
@@ -98,33 +115,20 @@ public class DocumentRequestController : Controller
     //    return stream.ToArray();
 
     //}
-    
-    // Given a JSON path and returns the value that is to be inserted 
-    // at the position of the path
-    private string TagReplace(string objPath)
+
+    private string ReplaceFunc(string key)
     {
+
+        if (key == "")
+        {
+            // TODO: handle
+            return "";
+        }
         
-        // 1. Try to get the token from Obj
-        // 2. if the value has formatting (like a date), format it and then replace it
-        // 3. otherwise just return the value
-        // 4. if the value does not exist, return {ERR: key}
+        JToken? token = Obj.SelectToken(key);
 
-        if (objPath == "")
-        {
-            return "ERR: EMPTY KEY";
-        }
-
-        JToken? token = Obj.SelectToken(objPath);
-
-        if (token != null)
-        {
-
-            return token.ToString();
-
-        }
-
-        return $"{{ERR: {objPath}}}";
-
+        return token != null ? token.ToString() : "";
+        
     }
 
 }
