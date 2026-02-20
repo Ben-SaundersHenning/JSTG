@@ -51,41 +51,6 @@ SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
---
--- Name: assessment_types; Type: TABLE; Schema: public; Owner: jstg
---
-
-CREATE TABLE public.assessment_types (
-    id integer NOT NULL,
-    is_active boolean NOT NULL DEFAULT TRUE,
-    name text,
-    common_name text
-);
-
-
-ALTER TABLE public.assessment_types OWNER TO jstg;
-
---
--- Name: assessment_types_id_seq; Type: SEQUENCE; Schema: public; Owner: jstg
---
-
-CREATE SEQUENCE public.assessment_types_id_seq
-    AS integer
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER SEQUENCE public.assessment_types_id_seq OWNER TO jstg;
-
---
--- Name: assessment_types_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: jstg
---
-
-ALTER SEQUENCE public.assessment_types_id_seq OWNED BY public.assessment_types.id;
-
 
 --
 -- Name: assessors; Type: TABLE; Schema: public; Owner: jstg
@@ -223,13 +188,6 @@ ALTER SEQUENCE public.referral_companies_id_seq OWNED BY public.referral_compani
 
 
 --
--- Name: assessment_types id; Type: DEFAULT; Schema: public; Owner: jstg
---
-
-ALTER TABLE ONLY public.assessment_types ALTER COLUMN id SET DEFAULT nextval('public.assessment_types_id_seq'::regclass);
-
-
---
 -- Name: documents id; Type: DEFAULT; Schema: public; Owner: jstg
 --
 
@@ -248,15 +206,6 @@ ALTER TABLE ONLY public.images ALTER COLUMN id SET DEFAULT nextval('public.image
 --
 
 ALTER TABLE ONLY public.referral_companies ALTER COLUMN id SET DEFAULT nextval('public.referral_companies_id_seq'::regclass);
-
-
---
--- Data for Name: assessment_types; Type: TABLE DATA; Schema: public; Owner: jstg
---
-
-INSERT INTO public.assessment_types (id, name, common_name) VALUES (1, 'Assessment type 1', 'at1');
-INSERT INTO public.assessment_types (id, name, common_name) VALUES (2, 'Assessment type 2', 'at2');
-INSERT INTO public.assessment_types (id, name, common_name) VALUES (3, 'Assessment type 3', 'at3');
 
 
 --
@@ -308,13 +257,6 @@ INSERT INTO public.referral_companies (id, name, common_name, street_address, un
 
 
 --
--- Name: assessment_types_id_seq; Type: SEQUENCE SET; Schema: public; Owner: jstg
---
-
-SELECT pg_catalog.setval('public.assessment_types_id_seq', 3, TRUE);
-
-
---
 -- Name: documents_id_seq; Type: SEQUENCE SET; Schema: public; Owner: jstg
 --
 
@@ -333,14 +275,6 @@ SELECT pg_catalog.setval('public.images_id_seq', 1, TRUE);
 --
 
 SELECT pg_catalog.setval('public.referral_companies_id_seq', 2, TRUE);
-
-
---
--- Name: assessment_types assessment_types_pkey; Type: CONSTRAINT; Schema: public; Owner: jstg
---
-
-ALTER TABLE ONLY public.assessment_types
-    ADD CONSTRAINT assessment_types_pkey PRIMARY KEY (id);
 
 
 --
