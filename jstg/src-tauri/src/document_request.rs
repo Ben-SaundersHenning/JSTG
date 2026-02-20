@@ -3,7 +3,6 @@ mod cat;
 mod mrb;
 
 use crate::db;
-// use crate::fs;
 use crate::fs::save_file_to_disk;
 use crate::storage::Settings;
 use crate::Error;
@@ -15,9 +14,7 @@ use log::info;
 use mrb::Mrb;
 use serde::{Deserialize, Serialize};
 
-// const ENDPOINT: &str = "http://localhost:8081/DocRequest"; //docker
-//const ENDPOINT: &str = "http://localhost:5250/DocRequest";
-// const DOC_API_PATH: &str = "/DocRequest";
+const DOCUMENT_API_URL: &str = env!("DOCUMENT_API_URL");
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
@@ -177,14 +174,10 @@ impl DocumentRequest {
 
         let r = request.clone();
 
-        println!("{r}");
+        // print the request to stdout
+        // println!("{r}");
 
-        // TODO: FOR RELEASE
-        // let endp = var("DOCUMENT_API").unwrap();
-        let settings = Settings::open();
-        let endp = settings.get("DOCUMENT_API").unwrap().to_owned();
-
-        let endpoint = format!("{endp}/DocRequest");
+        let endpoint = format!("{DOCUMENT_API_URL}/DocRequest");
 
         info!(target: "app", "Pointing to {0}", endpoint.clone());
 
@@ -196,9 +189,6 @@ impl DocumentRequest {
             .header("content-type", "application/json")
             .send()
             .await?;
-
-        // Ok(res)
-        println!("got a response");
 
         match res.status() {
             reqwest::StatusCode::OK => {
