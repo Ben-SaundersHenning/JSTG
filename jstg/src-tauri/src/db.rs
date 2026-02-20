@@ -83,8 +83,12 @@ pub struct ImageData {
 
 // Retrieves the set of documents
 // (name)
-// FIX: this should depend on the assessment_types table,
-// then documents for the active types should be fetched
+// NOTE: in the future, it would be cool if this fetched the unique
+// document options (A, B, C, etc...) and the frontend auto updated
+// options based on selections. Ex: image A_B is a template. Then,
+// when A is clicked, C grays out, but B is still an option. Basically,
+// the document is picked based on a AND of individual types, and the
+// UI is dynamic to reflect which options are available.
 #[tauri::command]
 pub async fn get_document_options() -> Result<JsonListing, Error> {
     let mut conn_str: String = String::new();
