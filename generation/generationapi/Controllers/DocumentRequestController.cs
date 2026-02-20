@@ -2,13 +2,10 @@ using System.Runtime.InteropServices.JavaScript;
 using common;
 using common.Interfaces;
 using common.Models;
-using DocProcessor;
-using DocumentFormat.OpenXml.Presentation;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Document = DocProcessor.Document;
 
 namespace generationapi.Controllers;
 
@@ -33,72 +30,74 @@ public class DocumentRequestController : Controller
             return BadRequest();
         }
 
-        DocumentLogic logic = new(data);
-        
-        // fix image path (TEMP)
-        string imgPaths = _configuration["ImagesPath"];
-        data.signatureFileName = imgPaths + data.signatureFileName;
-        
-        DefaultContractResolver contractResolver = new DefaultContractResolver
-        {
-            NamingStrategy = new SnakeCaseNamingStrategy()
-        };        
+       // DocumentLogic logic = new(data);
+       // 
+       // // fix image path (TEMP)
+       // string imgPaths = _configuration["ImagesPath"];
+       // data.signatureFileName = imgPaths + data.signatureFileName;
+       // 
+       // DefaultContractResolver contractResolver = new DefaultContractResolver
+       // {
+       //     NamingStrategy = new SnakeCaseNamingStrategy()
+       // };        
 
-        Obj = JObject.Parse(JsonConvert.SerializeObject(data, new JsonSerializerSettings
-        {
-            ContractResolver = contractResolver,
-            Formatting = Formatting.Indented
-        }));
-            
-        byte[] result = GenerateDocument(Obj, logic, TagReplace);
+       // Obj = JObject.Parse(JsonConvert.SerializeObject(data, new JsonSerializerSettings
+       // {
+       //     ContractResolver = contractResolver,
+       //     Formatting = Formatting.Indented
+       // }));
+       //     
+       // byte[] result = GenerateDocument(Obj, logic, TagReplace);
+
+       byte[] result = new byte[5];
             
         return new FileContentResult(result, "application/octet-stream");
             
     }
 
-    private byte[] GenerateDocument(JObject data, IDocumentLogic logic, Func<string, string> replacementFunc)
-    {
-        
-        // 1. Open stream
-        
-        using MemoryStream stream = new();
-        
-        // 2. Find doc file name, open document
-        
-        //TODO: check if doc exists
+    //private byte[] GenerateDocument(JObject data, IDocumentLogic logic, Func<string, string> replacementFunc)
+    //{
+    //    
+    //    // 1. Open stream
+    //    
+    //    using MemoryStream stream = new();
+    //    
+    //    // 2. Find doc file name, open document
+    //    
+    //    //TODO: check if doc exists
 
-        string filePaths = _configuration["TemplatesPath"];
-        string docFileName = (string)data.SelectToken("document.file_name");
+    //    string filePaths = _configuration["TemplatesPath"];
+    //    string docFileName = (string)data.SelectToken("document.file_name");
 
-        Document doc = new Document(filePaths + docFileName, DocumentType.ExistingDocument);
+    //    Document doc = new Document(filePaths + docFileName, DocumentType.ExistingDocument);
 
-        // 3. Resolve conditional statements
-        
-        // TODO
-        
-        // 3. Find image file name
-        
-        //TODO: check if image exists
-        
-        
-        // 4. Insert image into document
-        
-        //image replace has to be done first, since the tag matches the text replacement tags.
-        
-        // 5. Replace all tags
-        
-        //replace the tags
-        //doc.SearchAndReplaceTextByRegex(@"<([\w \[\]._-]{3,})>", replacementFunc); 
-        doc.ProcessDocument(replacementFunc, Obj, logic);
-        
-        // 6. Save doc into byte array
-        
-        doc.SaveAsStream(stream);
-        doc.Dispose();
-        
-        return stream.ToArray();
+    //    // 3. Resolve conditional statements
+    //    
+    //    // TODO
+    //    
+    //    // 3. Find image file name
+    //    
+    //    //TODO: check if image exists
+    //    
+    //    
+    //    // 4. Insert image into document
+    //    
+    //    //image replace has to be done first, since the tag matches the text replacement tags.
+    //    
+    //    // 5. Replace all tags
+    //    
+    //    //replace the tags
+    //    //doc.SearchAndReplaceTextByRegex(@"<([\w \[\]._-]{3,})>", replacementFunc); 
+    //    doc.ProcessDocument(replacementFunc, Obj, logic);
+    //    
+    //    // 6. Save doc into byte array
+    //    
+    //    doc.SaveAsStream(stream);
+    //    doc.Dispose();
+    //    
+    //    return stream.ToArray();
 
-    }
+    //}
     
     // Given a JSON path and returns the value that is to be inserted 
     // at the position of the path
