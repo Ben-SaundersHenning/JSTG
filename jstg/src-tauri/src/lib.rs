@@ -10,6 +10,12 @@ use log4rs::config::{Appender, Logger, Root};
 use log4rs::encode::pattern::PatternEncoder;
 use log4rs::Config;
 
+use tauri::Manager;
+
+use sqlx::postgres::PgPool;
+
+use std::env;
+
 mod db;
 mod document_request;
 mod fs;
@@ -18,6 +24,8 @@ mod util;
 
 extern crate dirs;
 
+const DB_CONN_STR: &str = "JSTG_DB_POSTGRESQL";
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -25,7 +33,7 @@ pub fn run() {
         .setup(setup_handler)
         .invoke_handler(tauri::generate_handler![
             db::get_assessor_options,
-            db::get_document_options,
+            db::get_template_options,
             db::get_referral_company_options,
             document_request::request_document,
             storage::get_config,
@@ -73,6 +81,12 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
 
     info!(target: "app", "JSTG is starting.");
 
+    let pool = tauri::async_runtime::block_on(
+        PgPool::connect(&get_connection_string())
+    ).unwrap();
+
+    app.manage(pool);
+
     Ok(())
 }
 
@@ -83,7 +97,7 @@ pub enum Error {
     // Io(#[from] std::io::Error),
     // #[error("File is not valid utf8: {0}")]
     // Utf8(#[from] std::string::FromUtf8Error),
-    #[error("Error retrieving values from the database.")]
+    #[error("Error retrieving values from the database: {0}")]
     Sqlx(#[from] sqlx::Error),
     #[error("Error converting data to struct.")]
     Serde(#[from] serde_json::Error),
@@ -92,7 +106,7 @@ pub enum Error {
     #[error("Error validating document API response.")]
     DocErr,
     #[error("Error saving file to disk.")]
-    WriteErr,
+    WriteErr
 }
 
 impl serde::Serialize for Error {
@@ -103,3 +117,13 @@ impl serde::Serialize for Error {
         serializer.serialize_str(self.to_string().as_ref())
     }
 }
+
+fn get_connection_string() -> String {
+    // dev environment
+    if cfg!(dev) {
+        "postgres://jstg:password@localhost:5432/jsot".to_string()
+    } else {
+        env::var(DB_CONN_STR).unwrap()
+    }
+}
+

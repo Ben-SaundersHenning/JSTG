@@ -12,6 +12,21 @@
 
     import dayjs from 'dayjs';
 
+    interface AssessorListing {
+        registration_id: string;
+        name: string;
+    }
+
+    interface ReferralCompanyListing {
+        id: number;
+        commonName: string;
+    }
+
+    interface TemplateListing {
+        id: number;
+        label: string;
+    }
+
     const includeAC = ref(false);
     const includeCAT = ref(false);
     const includeMRB = ref(false);
@@ -168,20 +183,17 @@
 
     onMounted(() => {
 
-        invoke('get_assessor_options').then((assessor_options) => {
-            // console.log(assessor_options.listing_details);
-            assessors.value = assessor_options.listing_details as Array;
-        })
-        .catch((e) => console.log(e));
+        invoke<AssessorListing[]>('get_assessor_options')
+            .then((options) => assessors.value = options)
+            .catch((e) => console.error('get_assessor_options failed:', e));
 
-        invoke('get_document_options').then((document_options) => {
-            // console.log(document_options.listing_details);
-            documents.value = document_options.listing_details as Array;
-        })
-        .catch((e) => console.log(e));
+        invoke<TemplateListing[]>('get_template_options')
+            .then((options) => documents.value = options)
+            .catch((e) => console.error('get_template_options failed:', e));
 
-        invoke('get_referral_company_options').then((rc_options) => referral_companies.value = rc_options.listing_details as Array)
-        .catch((e) => console.log(e));
+        invoke<ReferralCompanyListing[]>('get_referral_company_options')
+            .then((options) => referral_companies.value = options)
+            .catch((e) => console.error('get_referral_company_options failed:', e));
 
     })
 
@@ -211,7 +223,7 @@
                         <span v-for="(document, index) in documents">
                             <input type="radio" name="document" :id="'document' + document.id" :value="document.id"
                                    v-model="documentId" :="documentIdAtrb">
-                            <label :for="'document' + document.id">{{document.document}}</label>
+                            <label :for="'document' + document.id">{{document.label}}</label>
                         </span>
                     </div>
                     <span class="error">{{errors['documentId']}}</span>
@@ -222,7 +234,7 @@
                         <span v-for="(company, index) in referral_companies">
                             <input type="radio" name="company" :id="'company' + company.id" :value="company.id"
                                    v-model="rcId" :="rcIdAtrb"/>
-                            <label :for="'company' + company.id">{{company.name}}</label>
+                            <label :for="'company' + company.id">{{company.commonName}}</label>
                         </span>
                     </div>
                     <span class="error">{{errors['referralCompanyId']}}</span>

@@ -4,7 +4,6 @@ mod mrb;
 
 use crate::db;
 use crate::fs::save_file_to_disk;
-use crate::storage::Settings;
 use crate::Error;
 use ac::Ac;
 use bytes::Bytes;
@@ -13,6 +12,7 @@ use chrono::NaiveDate;
 use log::info;
 use mrb::Mrb;
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 
 const DOCUMENT_API_URL: &str = env!("DOCUMENT_API_URL");
 
@@ -42,29 +42,24 @@ impl FormRequest {
     // TODO: Add some checks to the data returning from the DB.
     // Since the IDs are retrieved from the DB, they should theoretically
     // never be incorrect, but the DB itself could be down.
-    async fn build_document_request(self) -> DocumentRequest {
+    async fn build_document_request(self, pool: &PgPool) -> Result<DocumentRequest, Error> {
         // 1. Retrieive assessor
-        let assessor: db::Assessor = db::get_assessor(&self.assessor_registration_id)
-            .await
-            .unwrap()
-            .unwrap();
+        let assessor: db::Assessor = db::get_assessor(&self.assessor_registration_id, pool)
+            .await?;
 
         // 2. Retrieive referral company
         let referral_company: db::ReferralCompany =
-            db::get_referral_company(self.referral_company_id)
-                .await
-                .unwrap()
-                .unwrap();
+            db::get_referral_company(self.referral_company_id, pool)
+                .await?;
 
         // 3. Retrieive document file name
-        let document: db::Document = db::get_document(self.document_id).await.unwrap().unwrap();
+        let document: db::Template = db::get_template(self.document_id, pool).await?;
 
         // 4. Retrieive image (signature file name)
-        let image_data: db::ImageData =
-            db::get_assessor_signature_file_name(&self.assessor_registration_id)
-                .await
-                .unwrap()
-                .unwrap();
+        // let image_data: db::ImageData =
+        //     db::get_assessor_signature_file_name(&self.assessor_registration_id)
+        //         .await?
+        //         .unwrap();
 
         // 5. Build AC portion
         let ac: Option<Ac> = match &self.ac {
@@ -89,14 +84,13 @@ impl FormRequest {
         };
 
         // 6. Return a Document Request
-        DocumentRequest::from_form_request(
+        Ok(DocumentRequest::from_form_request(
             self,
             assessor,
-            &image_data.file_name,
             referral_company,
             document,
             ac,
-        )
+        ))
     }
 }
 
@@ -104,14 +98,13 @@ impl FormRequest {
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 struct DocumentRequest {
     assessor: db::Assessor,
-    signature_file_name: String,
     adjuster: Option<String>,
     insurance_company: String,
     claim_number: String,
     referral_company: db::ReferralCompany,
     date_of_assessment: NaiveDate,
     claimant: db::Claimant,
-    document: db::Document,
+    document: db::Template,
     ac: Option<Ac>,
     cat: Option<Cat>,
     mrb: Option<Mrb>,
@@ -121,11 +114,11 @@ impl DocumentRequest {
     fn from_form_request(
         form_request: FormRequest,
         assessor: db::Assessor,
-        signature_file_name: &str,
         referral_company: db::ReferralCompany,
-        document: db::Document,
+        document: db::Template,
         ac: Option<Ac>,
     ) -> Self {
+
         // Calculate age in years
         let doa: i32 = form_request
             .date_of_assessment
@@ -146,7 +139,6 @@ impl DocumentRequest {
 
         DocumentRequest {
             assessor,
-            signature_file_name: signature_file_name.to_owned(),
             adjuster: form_request.adjuster,
             insurance_company: form_request.insurance_company,
             claim_number: form_request.claim_number,
@@ -172,8 +164,7 @@ impl DocumentRequest {
     async fn send_request(self) -> Result<Bytes, Error> {
         let request = serde_json::to_string(&self).unwrap();
 
-        let r = request.clone();
-
+        // let r = request.clone();
         // print the request to stdout
         // println!("{r}");
 
@@ -207,7 +198,7 @@ impl DocumentRequest {
         format!(
             "{}_{}_{} {}_{}{}.docx",
             self.referral_company.common_name,
-            self.document.user_friendly_name,
+            self.document.label,
             self.claimant.first_name,
             self.claimant.last_name,
             self.assessor.first_name.chars().next().unwrap(),
@@ -217,11 +208,11 @@ impl DocumentRequest {
 }
 
 #[tauri::command]
-pub async fn request_document(data: String) -> Result<String, String> {
+pub async fn request_document(data: String, pool: tauri::State<'_, PgPool>) -> Result<String, Error> {
     info!(target: "app", "Processing new request.");
 
     let request = FormRequest::from_json(data).unwrap();
-    let document_request = request.build_document_request().await;
+    let document_request = request.build_document_request(pool.inner()).await?;
     let file_name = document_request.build_file_name();
 
     let response = document_request.send_request().await;
@@ -236,5 +227,5 @@ pub async fn request_document(data: String) -> Result<String, String> {
         }
     }
 
-    Err("Error saving file to the disk".to_string())
+    Err(Error::WriteErr)
 }

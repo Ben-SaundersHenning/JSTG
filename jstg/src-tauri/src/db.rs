@@ -1,10 +1,7 @@
 use crate::Error;
 use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgConnection, Connection};
-use std::env;
-
-const DB_CONN_STR: &str = "JSTG_DB_POSTGRESQL";
+use sqlx::PgPool;
 
 #[derive(Serialize, Deserialize, sqlx::Type, Debug)]
 #[sqlx(rename_all = "lowercase")]
@@ -12,11 +9,6 @@ pub enum Gender {
     Male,
     Female,
     Other,
-}
-
-#[derive(Serialize, sqlx::FromRow, Debug)]
-pub struct JsonListing {
-    pub listing_details: sqlx::types::JsonValue,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
@@ -27,6 +19,13 @@ pub struct Assessor {
     pub gender: Gender,
     pub email: String,
     pub qualifications_paragraph: String,
+    pub signature_path: String
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+pub struct AssessorListing {
+    pub registration_id: String,
+    pub name: String
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
@@ -39,6 +38,43 @@ pub struct ReferralCompany {
     pub email: String,
     #[sqlx(flatten)]
     pub address: Address,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ReferralCompanyListing {
+    pub id: i32,
+    pub common_name: String,
+}
+
+#[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
+pub struct TemplateListing {
+    pub id: i32,
+    pub label: String
+}
+
+// template base types
+#[derive(Serialize, Deserialize, Debug)]
+pub struct BaseType {
+    pub id: i32,
+    pub name: String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Template {
+    pub id: i32,
+    pub label: String,
+    pub file_path: String,
+    pub base_types: Vec<BaseType>
+}
+
+#[derive(sqlx::FromRow, Debug)]
+pub struct TemplateRow {
+    pub id: i32,
+    pub label: String,
+    pub file_path: String,
+    pub base_type_id: i32,
+    pub base_type_name: String,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
@@ -62,258 +98,153 @@ pub struct Address {
     pub unit: Option<String>,
     pub city: String,
     pub province: String,
-    pub postal_code: String,
     pub country: String,
+    pub postal_code: String,
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
-pub struct Document {
+pub struct DocumentTemplates {
     pub id: i32,
-    pub user_friendly_name: String,
-    pub file_name: String,
+    pub label: String
 }
 
 #[derive(Serialize, Deserialize, sqlx::FromRow, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
 pub struct ImageData {
-    pub file_name: String,
+    pub file_path: String,
 }
 
-
-// Retrieves the set of documents
-// (name)
-// NOTE: in the future, it would be cool if this fetched the unique
-// document options (A, B, C, etc...) and the frontend auto updated
-// options based on selections. Ex: image A_B is a template. Then,
-// when A is clicked, C grays out, but B is still an option. Basically,
-// the document is picked based on a AND of individual types, and the
-// UI is dynamic to reflect which options are available.
 #[tauri::command]
-pub async fn get_document_options() -> Result<JsonListing, Error> {
-    let mut conn_str: String = String::new();
-
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
-
-    let mut conn = PgConnection::connect(&conn_str).await?;
-
-    // Fetches a JSON array of JSON objects,
-    // where each object represents one company.
-    let query = "SELECT json_agg(json_build_object(
-                    'document', d.common_name,
-                    'id', d.id
-                    )) as listing_details
-                 FROM \"documents\" d;";
-
-    let documents = sqlx::query_as::<_, JsonListing>(query)
-        .fetch_one(&mut conn)
-        .await?;
-
-    conn.close().await?;
-
-    Ok(documents)
-}
-
-// Retrieives a document file name from the database based on
-// a given unique ID.
-pub async fn get_document(document_id: i32) -> Result<Option<Document>, Error> {
-    let mut conn_str: String = String::new();
-
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
-
-    let mut conn = PgConnection::connect(&conn_str).await?;
-
-    let query = "SELECT id,
-                        user_friendly_name,
-                        file_name
-                 FROM \"documents\"
-                 WHERE id = $1";
-
-    let document = sqlx::query_as::<_, Document>(query)
-        .bind(document_id)
-        .fetch_optional(&mut conn)
-        .await?;
-
-    conn.close().await?;
-
-    Ok(document)
-}
-
-// Retrieves the set of assessors
-// (name, id)
-#[tauri::command]
-pub async fn get_assessor_options() -> Result<JsonListing, Error> {
-    let mut conn_str: String = String::new();
-
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
-
-    let mut conn = PgConnection::connect(&conn_str).await?;
-
-    // Fetches a JSON array of JSON objects,
-    // where each object represents one company.
-    let query = "SELECT json_agg(json_build_object(
-                    'name', a.first_name || ' ' || a.last_name,
-                    'id', trim(a.registration_id)
-                    )) as listing_details
-                 FROM \"assessors\" a
-                 WHERE is_active;";
-
-    let assessors = sqlx::query_as::<_, JsonListing>(query)
-        .fetch_one(&mut conn)
-        .await?;
-
-    conn.close().await?;
-
-    Ok(assessors)
-}
-
-// Retrieives an assessor from the database based on
-// a given unique ID.
-pub async fn get_assessor(registration_id: &str) -> Result<Option<Assessor>, Error> {
-    let mut conn_str: String = String::new();
-
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
-
-    let mut conn = PgConnection::connect(&conn_str).await?;
+pub async fn get_assessor_options(pool: tauri::State<'_, PgPool>) -> Result<Vec<AssessorListing>, Error> {
 
     let query = "SELECT registration_id,
-                        first_name,
-                        last_name,
-                        gender,
-                        email,
-                        qualifications_paragraph
-                 FROM \"assessors\"
+                        first_name || ' ' || last_name as name
+                 FROM assessors
+                 WHERE is_active";
+
+    let assessor_opts = sqlx::query_as::<_, AssessorListing>(query)
+        .fetch_all(pool.inner())
+        .await?;
+
+    Ok(assessor_opts)
+
+}
+
+pub async fn get_assessor(registration_id: &str, pool: &PgPool) -> Result<Assessor, Error> {
+
+    let query = "SELECT a.registration_id,
+                        a.first_name,
+                        a.last_name,
+                        a.gender,
+                        a.email,
+                        a.qualifications_paragraph,
+                        i.file_path as signature_path
+                 FROM assessors a
+                 INNER JOIN images i
+                 ON a.registration_id = i.assessor_id
                  WHERE registration_id = $1";
 
     let assessor = sqlx::query_as::<_, Assessor>(query)
         .bind(registration_id)
-        .fetch_optional(&mut conn)
+        .fetch_one(pool)
         .await?;
-
-    conn.close().await?;
 
     Ok(assessor)
+
 }
 
-// Retrieves the set of companies
-// (name, id)
 #[tauri::command]
-pub async fn get_referral_company_options() -> Result<JsonListing, Error> {
-    let mut conn_str: String = String::new();
-
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
-
-    let mut conn = PgConnection::connect(&conn_str).await?;
-
-    // Fetches a JSON array of JSON objects,
-    // where each object represents one company.
-    let query = "SELECT json_agg(json_build_object(
-                    'name', rc.common_name,
-                    'id', rc.id
-                    )) as listing_details
-                 FROM \"referral_companies\" rc
-                 WHERE is_active;";
-
-    let companies = sqlx::query_as::<_, JsonListing>(query)
-        .fetch_one(&mut conn)
-        .await?;
-
-    conn.close().await?;
-
-    Ok(companies)
-}
-
-// Retrieives a company from the database based on
-// a given unique ID.
-pub async fn get_referral_company(
-    referral_company_id: i32,
-) -> Result<Option<ReferralCompany>, Error> {
-    let mut conn_str: String = String::new();
-
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
-
-    let mut conn = PgConnection::connect(&conn_str).await?;
+pub async fn get_referral_company_options(pool: tauri::State<'_, PgPool>) -> Result<Vec<ReferralCompanyListing>, Error> {
 
     let query = "SELECT id,
-                        name,
-                        common_name,
-                        phone,
-                        fax,
-                        email,
-                        street_address,
-                        unit,
-                        postal_code,
-                        city,
-                        province,
-                        country
-                 FROM \"referral_companies\"
-                 WHERE \"id\" = $1;";
+                        common_name
+                 FROM referral_companies
+                 WHERE is_active";
 
-    let company = sqlx::query_as::<_, ReferralCompany>(query)
-        .bind(referral_company_id)
-        .fetch_optional(&mut conn)
+    let referral_company_opts = sqlx::query_as::<_, ReferralCompanyListing>(query)
+        .fetch_all(pool.inner())
         .await?;
 
-    conn.close().await?;
+    Ok(referral_company_opts)
 
-    Ok(company)
 }
 
-pub async fn get_assessor_signature_file_name(
-    registration_id: &str,
-) -> Result<Option<ImageData>, Error> {
-    let mut conn_str: String = String::new();
+pub async fn get_referral_company(id: i32, pool: &PgPool) -> Result<ReferralCompany, Error> {
 
-    // dev environment
-    if cfg!(dev) {
-        conn_str.push_str("postgres://jstg:password@localhost:5432/jsot");
-    } else {
-        conn_str.push_str(&env::var(DB_CONN_STR).unwrap());
-    }
+    let query = "SELECT rc.id,
+                        rc.name,
+                        rc.common_name,
+                        rc.phone,
+                        rc.fax,
+                        rc.email,
+                        rca.street_address,
+                        rca.unit,
+                        rca.postal_code,
+                        rca.city,
+                        rca.province,
+                        rca.country
+                 FROM referral_companies rc
+                 INNER JOIN referral_company_addresses rca
+                 ON rc.id = rca.company_id
+                 WHERE rc.id = $1
+                 AND rca.address_type = 'physical';";
 
-    let mut conn = PgConnection::connect(&conn_str).await?;
-
-    let query = "SELECT file_name
-                 FROM \"images\"
-                 WHERE assessor_id = $1
-                 AND image_type = 'signature'";
-
-    let signature = sqlx::query_as::<_, ImageData>(query)
-        .bind(registration_id)
-        .fetch_optional(&mut conn)
+    let company = sqlx::query_as::<_, ReferralCompany>(query)
+        .bind(id)
+        .fetch_one(pool)
         .await?;
 
-    conn.close().await?;
+    Ok(company)
 
-    Ok(signature)
+}
+
+#[tauri::command]
+pub async fn get_template_options(pool: tauri::State<'_, PgPool>) -> Result<Vec<TemplateListing>, Error> {
+
+    let query = "SELECT id,
+                        label
+                 FROM document_templates
+                 WHERE is_active";
+
+    let template_opts = sqlx::query_as::<_, TemplateListing>(query)
+        .fetch_all(pool.inner())
+        .await?;
+
+    Ok(template_opts)
+
+}
+
+pub async fn get_template(id: i32, pool: &PgPool) -> Result<Template, Error> {
+
+    let query = "SELECT dt.id,
+                        dt.label,
+                        dt.file_path,
+                        abt.id as base_type_id,
+                        abt.name as base_type_name
+                FROM document_templates dt
+                INNER JOIN document_type_members dtm
+                ON dt.id = dtm.combination_id
+                INNER JOIN assessment_base_types abt
+                ON dtm.type_id = abt.id
+                WHERE dt.id = $1";
+
+    let opts = sqlx::query_as::<_, TemplateRow>(query)
+        .bind(id)
+        .fetch_all(pool)
+        .await?;
+
+    let template = Template {
+        id: opts[0].id,
+        label: opts[0].label.clone(),
+        file_path: opts[0].file_path.clone(),
+        base_types: opts.iter().map(|r| BaseType {
+            id: r.base_type_id,
+            name: r.base_type_name.clone(),
+        }).collect(),
+
+    };
+
+    Ok(template)
+
 }
