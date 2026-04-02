@@ -167,6 +167,7 @@
         }
 
         // console.log(JSON.stringify(values));
+        console.log("test")
 
         invoke('request_document', { data: JSON.stringify(values) });
 
@@ -186,6 +187,9 @@
         invoke<AssessorListing[]>('get_assessor_options')
             .then((options) => assessors.value = options)
             .catch((e) => console.error('get_assessor_options failed:', e));
+
+        console.log("assessors:");
+        console.log(assessors);
 
         invoke<TemplateListing[]>('get_template_options')
             .then((options) => documents.value = options)
@@ -210,9 +214,9 @@
                     <p class="input-label">Assessor</p>
                     <div class="horizontal-input input-border">
                         <span v-for="(assessor, index) in assessors">
-                            <input type="radio" name="assessor" :id="'assessor' + assessor.id" :value="assessor.id"
+                            <input type="radio" name="assessor" :id="'assessor' + assessor.registration_id" :value="assessor.registration_id"
                                    v-model="asrRegistrationId" :="asrRegistrationIdAtrb"/>
-                            <label :for="'assessor' + assessor.id">{{assessor.name}}</label>
+                            <label :for="'assessor' + assessor.registration_id">{{assessor.name}}</label>
                         </span>
                     </div>
                     <span class="error">{{errors['assessorRegistrationId']}}</span>

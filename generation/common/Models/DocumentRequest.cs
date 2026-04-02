@@ -30,7 +30,7 @@ public class DocumentRequest
    public Claimant claimant { get; set; }
    
    [JsonPropertyName("document")]
-   public Document document { get; set; }
+   public Template document { get; set; }
    
    [JsonPropertyName("ac")]
    public Ac? ac { get; set; }
@@ -80,6 +80,23 @@ public class Ac
    [JsonPropertyName("hourly_rates")]
    public List<string>? hourlyRates { get; set; }
    
+}
+
+public class Template
+{
+    
+    [JsonPropertyName("id")]
+    public int id { get; set; }
+   
+    [JsonPropertyName("label")]
+    public int label { get; set; }
+    
+    //[JsonPropertyName("base_types")]
+    //public List<> baseTypes { get; set; }
+   
+    [JsonPropertyName("file_path")]
+    public string filePath { get; set; }
+    
 }
 
 public class Document
