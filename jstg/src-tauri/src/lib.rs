@@ -15,6 +15,9 @@ mod document_request;
 mod fs;
 mod storage;
 mod util;
+mod config_manager;
+
+use config_manager::initialize_config;
 
 extern crate dirs;
 
@@ -37,6 +40,10 @@ pub fn run() {
 }
 
 fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error + 'static>> {
+
+    // init the user config
+    initialize_config(&app.handle());
+
     let mut app_logs: String = (&app.package_info().name).into();
     app_logs.push_str("/logs.log");
 

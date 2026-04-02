@@ -6,6 +6,7 @@ use crate::db;
 use crate::fs::save_file_to_disk;
 use crate::storage::Settings;
 use crate::Error;
+use crate::config_manager;
 use ac::Ac;
 use bytes::Bytes;
 use cat::Cat;
@@ -13,6 +14,7 @@ use chrono::NaiveDate;
 use log::info;
 use mrb::Mrb;
 use serde::{Deserialize, Serialize};
+use config_manager::get_config_path;
 
 const DOCUMENT_API_URL: &str = env!("DOCUMENT_API_URL");
 
@@ -217,7 +219,7 @@ impl DocumentRequest {
 }
 
 #[tauri::command]
-pub async fn request_document(data: String) -> Result<String, String> {
+pub async fn request_document(app: tauri::AppHandle, data: String) -> Result<String, String> {
     info!(target: "app", "Processing new request.");
 
     let request = FormRequest::from_json(data).unwrap();
@@ -228,7 +230,7 @@ pub async fn request_document(data: String) -> Result<String, String> {
 
     match response {
         Ok(file) => {
-            let _ = save_file_to_disk(file, file_name);
+            let _ = save_file_to_disk(app, file, file_name);
             return Ok("Successfully saved file to disk".to_owned());
         }
         Err(e) => {

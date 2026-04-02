@@ -8,7 +8,7 @@ use crate::Error;
 use std::fs::File;
 use std::io::Write;
 
-pub fn save_file_to_disk(file: Bytes, file_name: String) -> Result<(), Error> {
+pub fn save_file_to_disk(app: tauri::AppHandle, file: Bytes, file_name: String) -> Result<(), Error> {
     let settings = Settings::open();
 
     let mut path = settings.get("documentSavePath").unwrap().to_owned();

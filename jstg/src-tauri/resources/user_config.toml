@@ -1,2 +1,2 @@
-savePath = "/Users/ben/Test"
+DOCUMENT_SAVE_PATH = ""
 DOCUMENT_API = "http://localhost:5250"
