@@ -1,5 +1,5 @@
+using System.Runtime.Serialization;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json;
 
 namespace common.Models;
 
@@ -8,8 +8,8 @@ public class DocumentRequest
    [JsonPropertyName("assessor")]
    public Assessor assessor { get; set; } 
    
-   [JsonPropertyName("signature_file_name")]
-   public string signatureFileName { get; set; }
+   //[JsonPropertyName("signature_file_name")]
+   //public string signatureFileName { get; set; }
    
    [JsonPropertyName("adjuster")]
    public string? adjuster { get; set; }
@@ -89,7 +89,7 @@ public class Template
     public int id { get; set; }
    
     [JsonPropertyName("label")]
-    public int label { get; set; }
+    public String label { get; set; }
     
     //[JsonPropertyName("base_types")]
     //public List<> baseTypes { get; set; }
@@ -99,18 +99,18 @@ public class Template
     
 }
 
-public class Document
-{
-   [JsonPropertyName("id")]
-   public int id { get; set; }
-   
-   [JsonPropertyName("user_friendly_name")]
-   public string userFriendlyName { get; set; }
-   
-   [JsonPropertyName("file_name")]
-   public string fileName { get; set; }
-   
-}
+//public class Document
+//{
+//   [JsonPropertyName("id")]
+//   public int id { get; set; }
+//   
+//   [JsonPropertyName("user_friendly_name")]
+//   public string userFriendlyName { get; set; }
+//   
+//   [JsonPropertyName("file_name")]
+//   public string fileName { get; set; }
+//   
+//}
 
 public class Claimant
 {
@@ -121,7 +121,9 @@ public class Claimant
    public string lastName { get; set; }
    
    [JsonPropertyName("gender")]
-   public string gender { get; set; }
+   //[JsonConverter(typeof(StringEnumConverter))]
+   [JsonConverter(typeof(JsonStringEnumConverter))]
+   public Gender gender { get; set; }
    
    [JsonPropertyName("age")]
    public int? age { get; set; }
@@ -199,7 +201,9 @@ public class Assessor
    public string lastName { get; set; }
    
    [JsonPropertyName("gender")]
-   public string gender { get; set; }
+   //[JsonConverter(typeof(StringEnumConverter))]
+   [JsonConverter(typeof(JsonStringEnumConverter))]
+   public Gender gender { get; set; }
    
    [JsonPropertyName("email")]
    public string email { get; set; }
@@ -211,7 +215,10 @@ public class Assessor
 
 public enum Gender
 {
+   [EnumMember(Value = "Male")]
    Male,
+   [EnumMember(Value = "Female")]
    Female,
+   [EnumMember(Value = "Other")]
    Other
 }
