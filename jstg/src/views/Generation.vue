@@ -27,11 +27,13 @@
         label: string;
     }
 
+    const isDev = import.meta.env.DEV;
+
     const includeAC = ref(false);
     const includeCAT = ref(false);
     const includeMRB = ref(false);
 
-    const { errors, handleSubmit, defineField } = useForm({
+    const { errors, handleSubmit, defineField, setValues } = useForm({
         validationSchema: computed(() => toTypedSchema(
             z.object({
                 assessorRegistrationId: z.string().regex(/^G[0-9]{7}$/),
@@ -178,6 +180,34 @@
         // console.log("IncludeAC:", includeAC);
         // console.log("IncludeCAT:", includeCAT);
         // console.log("IncludeMRB:", includeMRB);
+    }
+
+    function fillTestData() {
+        console.log("Filling form with test data")
+        setValues({
+            assessorRegistrationId: 'G1234567',
+            adjuster: 'John Smith',
+            insuranceCompany: 'Intact Insurance',
+            claimNumber: 'CLM-2024-001',
+            referralCompanyId: 1,
+            dateOfAssessment: '2024-01-15',
+            claimant: {
+                firstName: 'Jane',
+                lastName: 'Doe',
+                gender: 'Female',
+                dateOfBirth: '1985-06-20',
+                dateOfLoss: '2023-11-10',
+                address: {
+                    streetAddress: '123 Main St',
+                    unit: '4B',
+                    city: 'Toronto',
+                    province: 'Ontario',
+                    postalCode: 'M1A 1A1',
+                    country: 'Canada',
+                },
+            },
+            documentId: 1,
+        });
     }
 
     const onSubmit = handleSubmit(onSuccess, onInvalidSubmit);
@@ -478,6 +508,15 @@
 
         <div class="horizontal-input" style="justify-content: center; margin-top: 30px;">
             <button class="submit" type="submit">Submit</button>
+        </div>
+
+        <div class="horizontal-input" style="justify-content: center; margin-top: 30px;">
+            <button
+                v-if="isDev"
+                type="button"
+                @click="fillTestData">
+                Fill Test Data
+            </button>
         </div>
 
     </form>
