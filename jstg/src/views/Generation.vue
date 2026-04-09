@@ -168,8 +168,8 @@
             delete values["mrb"];
         }
 
+        // console.log("SUBMITTING:")
         // console.log(JSON.stringify(values));
-        console.log("test")
 
         invoke('request_document', { data: JSON.stringify(values) });
 
@@ -188,13 +188,13 @@
             assessorRegistrationId: 'G1234567',
             adjuster: 'John Smith',
             insuranceCompany: 'Intact Insurance',
-            claimNumber: 'CLM-2024-001',
+            claimNumber: 'ABC-0101-2020',
             referralCompanyId: 1,
-            dateOfAssessment: '2024-01-15',
+            dateOfAssessment: '2026-04-09',
             claimant: {
-                firstName: 'Jane',
-                lastName: 'Doe',
-                gender: 'Female',
+                firstName: 'Ben',
+                lastName: 'Saunders-Henning',
+                gender: 'Male',
                 dateOfBirth: '1985-06-20',
                 dateOfLoss: '2023-11-10',
                 address: {
