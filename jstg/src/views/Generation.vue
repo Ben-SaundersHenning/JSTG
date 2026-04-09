@@ -142,16 +142,11 @@
         includeMRB.value = false;
 
         const doc = documents.value.find((document) => document.id === newID);
-        const docTypes = doc.document.split(" ");
-        if(docTypes.includes("AC")) {
-            includeAC.value = true;
-        }
-        if(docTypes.includes("CAT") || docTypes.includes("CAT_GOSE")) {
-            includeCAT.value = true;
-        }
-        if(docTypes.includes("MRB")) {
-            includeMRB.value = true;
-        }
+        const docTypes = doc.label.split("/");
+
+        includeAC.value = docTypes.includes("AC")
+        includeCAT.value = docTypes.includes("CAT") || docTypes.includes("CAT_GOSE")
+        includeMRB.value = docTypes.includes("MRB")
 
     });
 
@@ -168,18 +163,12 @@
             delete values["mrb"];
         }
 
-        // console.log("SUBMITTING:")
-        // console.log(JSON.stringify(values));
-
         invoke('request_document', { data: JSON.stringify(values) });
 
     }
 
     function onInvalidSubmit({ values, errors, results }) {
         console.log(errors);
-        // console.log("IncludeAC:", includeAC);
-        // console.log("IncludeCAT:", includeCAT);
-        // console.log("IncludeMRB:", includeMRB);
     }
 
     function fillTestData() {
@@ -217,9 +206,6 @@
         invoke<AssessorListing[]>('get_assessor_options')
             .then((options) => assessors.value = options)
             .catch((e) => console.error('get_assessor_options failed:', e));
-
-        console.log("assessors:");
-        console.log(assessors);
 
         invoke<TemplateListing[]>('get_template_options')
             .then((options) => documents.value = options)
