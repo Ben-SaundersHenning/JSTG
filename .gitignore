@@ -18,3 +18,4 @@ ex_max_req.json
 ex_max_req_flat.json
 ex_min_req.json
 ex_neb_req_TEST.json
+.env
