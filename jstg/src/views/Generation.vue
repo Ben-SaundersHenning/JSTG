@@ -33,7 +33,18 @@
     const includeCAT = ref(false);
     const includeMRB = ref(false);
 
-    const { errors, handleSubmit, defineField, setValues } = useForm({
+    const { errors, handleSubmit, defineField, setValues, meta } = useForm({
+        initialValues: {
+            claimant: {
+                address: {
+                    province: "Ontario",
+                    country: "Canada"
+                },
+            },
+            ac: {
+                firstAssessment: true,
+            }
+        },
         validationSchema: computed(() => toTypedSchema(
             z.object({
                 assessorRegistrationId: z.string().regex(/^G[0-9]{7}$/),
