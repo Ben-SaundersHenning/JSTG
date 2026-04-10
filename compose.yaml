@@ -10,7 +10,10 @@ services:
     #   - db
 
   generationapi:
-    build: ./generation
+    build:
+      context: ./generation
+      args:
+        - GITHUB_DOCKIT_TOKEN=${GITHUB_DOCKIT_TOKEN}
     ports:
       - 8081:8080
 
