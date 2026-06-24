@@ -3,7 +3,7 @@
 
 use std::path::Path;
 
-use log::{info, LevelFilter};
+use log::{info, error, LevelFilter};
 use log4rs::append::console::ConsoleAppender;
 use log4rs::append::file::FileAppender;
 use log4rs::config::{Appender, Logger, Root};
@@ -16,11 +16,14 @@ use sqlx::postgres::PgPool;
 
 use std::env;
 
+use config_manager::initialize_config;
+
 mod db;
 mod document_request;
 mod fs;
 mod storage;
 mod util;
+mod config_manager;
 
 extern crate dirs;
 
@@ -45,6 +48,8 @@ pub fn run() {
 }
 
 fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error + 'static>> {
+
+
     let mut app_logs: String = (&app.package_info().name).into();
     app_logs.push_str("/logs.log");
 
@@ -81,6 +86,10 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
 
     info!(target: "app", "JSTG is starting.");
 
+    if let Err(e) = initialize_config(app.handle()) {
+        error!("Config not initialized: {}", e);
+    }
+
     let pool = tauri::async_runtime::block_on(
         PgPool::connect(&get_connection_string())
     ).unwrap();
@@ -93,10 +102,10 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
 // A custom error type that represents all command errors
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    // #[error("Failed to read file: {0}")]
-    // Io(#[from] std::io::Error),
-    // #[error("File is not valid utf8: {0}")]
-    // Utf8(#[from] std::string::FromUtf8Error),
+    #[error("Failed to read file: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("File is not valid utf8: {0}")]
+    Utf8(#[from] std::string::FromUtf8Error),
     #[error("Error retrieving values from the database: {0}")]
     Sqlx(#[from] sqlx::Error),
     #[error("Error converting data to struct.")]
@@ -106,7 +115,13 @@ pub enum Error {
     #[error("Error validating document API response.")]
     DocErr,
     #[error("Error saving file to disk.")]
-    WriteErr
+    WriteErr,
+    #[error("Error deserializing TOML string")]
+    TomlDeserializeErr(#[from] toml::de::Error),
+    #[error("Error serializing TOML string")]
+    TomlSerializeErr(#[from] toml::ser::Error),
+    #[error("Tauri Error")]
+    TauriErr(#[from] tauri::Error)
 }
 
 impl serde::Serialize for Error {
