@@ -18,6 +18,8 @@ use std::env;
 
 use config_manager::initialize_config;
 
+use crate::config_manager::recover_config_file;
+
 mod db;
 mod document_request;
 mod fs;
@@ -86,9 +88,17 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
 
     info!(target: "app", "JSTG is starting.");
 
-    if let Err(e) = initialize_config(app.handle()) {
-        error!("Config not initialized: {}", e);
-    }
+    let config: String = match initialize_config(app.handle()) {
+        Ok(config) => config,
+        Err(e) => {
+            error!("Config not initialized: {}", e);
+            recover_config_file(app.handle())
+        }
+        // Err(e) => error!("Config not initialized: {}", e)
+        _ => "sdflj".to_string()
+    };
+
+    app.manage(config);
 
     let pool = tauri::async_runtime::block_on(
         PgPool::connect(&get_connection_string())

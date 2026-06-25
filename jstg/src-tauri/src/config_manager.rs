@@ -16,7 +16,7 @@ pub struct Config {
 
 
 // inits a base config if a valid configuration does not already exist
-pub fn initialize_config(app: &tauri::AppHandle) -> Result<String, Error> {
+pub fn initialize_config(app: &tauri::AppHandle) -> Result<Config, Error> {
 
     // get the path to the configuration file
     let config_path = get_config_path(app)?;
@@ -33,7 +33,7 @@ pub fn initialize_config(app: &tauri::AppHandle) -> Result<String, Error> {
 
         fs::write(&config_path, &toml)?;
 
-        return Ok(toml)
+        return Ok(default)
 
     }
 
@@ -56,6 +56,12 @@ pub fn initialize_config(app: &tauri::AppHandle) -> Result<String, Error> {
 
     Ok(config)
 
+}
+
+pub fn recover_config_file(app: &tauri::AppHandle) -> String {
+
+    // TODO: write this super safely
+    "sdlfkj".to_string()
 }
 
 fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, Error> {
