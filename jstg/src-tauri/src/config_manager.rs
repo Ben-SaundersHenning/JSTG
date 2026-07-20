@@ -11,7 +11,7 @@ const CONFIG_FILE: &str = "user_config.toml";
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    document_save_path: String
+    pub document_save_path: String
 }
 
 
