@@ -88,14 +88,12 @@ fn setup_handler(app: &mut tauri::App) -> Result<(), Box<dyn std::error::Error +
 
     info!(target: "app", "JSTG is starting.");
 
-    let config: String = match initialize_config(app.handle()) {
+    let config: config_manager::Config = match initialize_config(app.handle()) {
         Ok(config) => config,
         Err(e) => {
             error!("Config not initialized: {}", e);
             recover_config_file(app.handle())
         }
-        // Err(e) => error!("Config not initialized: {}", e)
-        _ => "sdflj".to_string()
     };
 
     app.manage(config);

@@ -1,4 +1,4 @@
-use serde::{Serialize};
+use serde::{Serialize, Deserialize};
 use tauri::Manager;
 use toml::Table;
 use std::str::FromStr;
@@ -9,7 +9,7 @@ use crate::Error;
 
 const CONFIG_FILE: &str = "user_config.toml";
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct Config {
     document_save_path: String
 }
@@ -54,18 +54,22 @@ pub fn initialize_config(app: &tauri::AppHandle) -> Result<Config, Error> {
     // overwrite and save the file
     fs::write(&config_path, &config)?;
 
-    Ok(config)
+    let conf: Config = toml::from_str(&config)?;
+
+    Ok(conf)
 
 }
 
-pub fn recover_config_file(app: &tauri::AppHandle) -> String {
+pub fn recover_config_file(app: &tauri::AppHandle) -> Config {
 
     // TODO: write this super safely
-    "sdlfkj".to_string()
+    Config {
+        document_save_path: "".to_owned()
+    }
 }
 
 fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, Error> {
     let config_dir = app.path().app_config_dir()?;
-    fs::create_dir_all(&config_dir)?;
+    fs::create_dir_all(&config_dir);
     Ok(config_dir.join(CONFIG_FILE))
 }
