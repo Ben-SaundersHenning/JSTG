@@ -15,7 +15,9 @@ use mrb::Mrb;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-const DOCUMENT_API_URL: &str = env!("DOCUMENT_API_URL");
+// TODO: fix this!
+// const DOCUMENT_API_URL: &str = env!("DOCUMENT_API_URL");
+const DOCUMENT_API_URL: &str = "TEMP";
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all(serialize = "snake_case", deserialize = "camelCase"))]
@@ -189,7 +191,9 @@ impl DocumentRequest {
 
                 return Ok(body);
             }
-            _status => {}
+            status => {
+                log::error!("Bad response code received from Document API: {0}", status)
+            }
         }
 
         Err(Error::DocErr)
