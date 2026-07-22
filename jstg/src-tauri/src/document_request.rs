@@ -3,6 +3,7 @@ mod cat;
 mod mrb;
 
 use crate::db;
+use crate::config_manager::Config;
 use crate::fs::save_file_to_disk;
 use crate::Error;
 use ac::Ac;
@@ -208,7 +209,8 @@ impl DocumentRequest {
 }
 
 #[tauri::command]
-pub async fn request_document(data: String, pool: tauri::State<'_, PgPool>) -> Result<String, Error> {
+pub async fn request_document(data: String, pool: tauri::State<'_, PgPool>, config: tauri::State<'_, Config>) -> Result<String, Error> {
+
     info!("Processing new request.");
 
     let request = FormRequest::from_json(data).unwrap();
@@ -219,7 +221,7 @@ pub async fn request_document(data: String, pool: tauri::State<'_, PgPool>) -> R
 
     match response {
         Ok(file) => {
-            let _ = save_file_to_disk(file, file_name);
+            let _ = save_file_to_disk(file, file_name, config);
             return Ok("Successfully saved file to disk".to_owned());
         }
         Err(e) => {
