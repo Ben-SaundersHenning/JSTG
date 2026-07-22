@@ -44,7 +44,7 @@ impl Settings {
                         }
                     }
 
-                    info!(target: "app", "Loaded the existing configuration file.");
+                    info!("Loaded the existing configuration file.");
 
                     return settings;
 
@@ -52,7 +52,7 @@ impl Settings {
                 } else {
                     // create the parent directories
                     if let Err(e) = create_dir_all(settings_file_path.parent().unwrap()) {
-                        error!(target: "app", "{}", e);
+                        error!("{}", e);
                     }
 
                     // create the file
@@ -74,13 +74,13 @@ impl Settings {
 
                     writer.flush().unwrap();
 
-                    info!(target: "app", "Created a configuration file with default options.");
+                    info!("Created a configuration file with default options.");
 
                     return settings;
                 }
             }
             Err(e) => {
-                error!(target: "app", "{}", e);
+                error!("{}", e);
             }
         }
 
@@ -155,7 +155,7 @@ impl Settings {
 
         writer.flush().unwrap();
 
-        info!(target: "app", "Updated the configuration file.");
+        info!("Updated the configuration file.");
 
         true
     }

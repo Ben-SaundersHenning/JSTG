@@ -170,7 +170,7 @@ impl DocumentRequest {
 
         let endpoint = format!("{DOCUMENT_API_URL}/DocRequest");
 
-        info!(target: "app", "Pointing to {0}", endpoint.clone());
+        info!("Pointing to {0}", endpoint.clone());
 
         let client = reqwest::Client::new();
         let res = client
@@ -209,7 +209,7 @@ impl DocumentRequest {
 
 #[tauri::command]
 pub async fn request_document(data: String, pool: tauri::State<'_, PgPool>) -> Result<String, Error> {
-    info!(target: "app", "Processing new request.");
+    info!("Processing new request.");
 
     let request = FormRequest::from_json(data).unwrap();
     let document_request = request.build_document_request(pool.inner()).await?;
@@ -223,7 +223,7 @@ pub async fn request_document(data: String, pool: tauri::State<'_, PgPool>) -> R
             return Ok("Successfully saved file to disk".to_owned());
         }
         Err(e) => {
-            info!(target: "app", "Error: {e}");
+            info!("Error: {e}");
         }
     }
 

@@ -17,7 +17,7 @@ pub fn save_file_to_disk(file: Bytes, file_name: String) -> Result<(), Error> {
         path.push_str(format!("/{file_name}").as_str());
     }
 
-    info!(target: "app", "Saving file as: {0}", path);
+    info!("Saving file as: {0}", path);
 
     let mut f: File = File::create(path).unwrap();
 
