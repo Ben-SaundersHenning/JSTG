@@ -69,7 +69,8 @@ pub fn recover_config_file(app: &tauri::AppHandle) -> Config {
 }
 
 fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, Error> {
-    let config_dir = app.path().app_config_dir()?;
-    fs::create_dir_all(&config_dir);
+    let config_dir = app.path().config_dir()?;
+    let jstg_config_dir = config_dir.join("jstg");
+    fs::create_dir_all(&jstg_config_dir)?;
     Ok(config_dir.join(CONFIG_FILE))
 }
