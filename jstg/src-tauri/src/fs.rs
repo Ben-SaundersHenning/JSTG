@@ -10,7 +10,7 @@ use std::io::Write;
 
 pub fn save_file_to_disk(file: Bytes, file_name: String, conf: tauri::State<Config>) -> Result<(), Error> {
 
-    let mut path = conf.document_save_path.to_owned();
+    let mut path = conf.user_config.document_save_path.to_owned();
 
     if create_dir_all(path.clone()).is_ok() {
         path.push_str(format!("/{file_name}").as_str());
