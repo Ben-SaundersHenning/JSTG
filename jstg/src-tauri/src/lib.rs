@@ -104,7 +104,9 @@ pub enum Error {
     #[error("Error serializing TOML string")]
     TomlSerializeErr(#[from] toml::ser::Error),
     #[error("Tauri Error")]
-    TauriErr(#[from] tauri::Error)
+    TauriErr(#[from] tauri::Error),
+    #[error("Error in configuration file: missing document_api_url")]
+    DocumentApiUrlMissingErr,
 }
 
 impl serde::Serialize for Error {

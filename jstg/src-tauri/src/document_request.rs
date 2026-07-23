@@ -15,8 +15,8 @@ use mrb::Mrb;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 
-// TODO: fix this!
 // const DOCUMENT_API_URL: &str = env!("DOCUMENT_API_URL");
+// TODO: fix this!
 const DOCUMENT_API_URL: &str = "TEMP";
 
 #[derive(Deserialize, Debug)]
