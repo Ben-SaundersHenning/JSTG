@@ -15,7 +15,6 @@ use crate::config_manager::recover_config_file;
 mod db;
 mod document_request;
 mod fs;
-mod storage;
 mod util;
 mod config_manager;
 
@@ -33,8 +32,6 @@ pub fn run() {
             db::get_template_options,
             db::get_referral_company_options,
             document_request::request_document,
-            storage::get_config,
-            storage::update_config,
             util::verify_directory,
         ])
         .run(tauri::generate_context!())
