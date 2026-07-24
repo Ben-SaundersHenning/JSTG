@@ -52,7 +52,6 @@ pub fn initialize_config(app: &tauri::AppHandle) -> Result<Config, Error> {
 
         let toml: String = toml::to_string_pretty(&default)?;
 
-
         // write the config to a new file
         fs::write(&config_path, &toml)?;
 
@@ -181,4 +180,18 @@ fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, Error> {
 #[tauri::command]
 pub fn get_config(config: tauri::State<Config>) -> Result<Config, Error> {
     Ok(config.inner().clone())
+}
+
+#[tauri::command]
+pub fn update_config(app_handle: &tauri::AppHandle, config: Config) -> Result<(), Error> {
+
+        let toml: String = toml::to_string_pretty(&config)?;
+
+        let config_path = get_config_path(app_handle)?;
+
+        // write the config to a new file
+        fs::write(&config_path, &toml)?;
+
+        Ok(())
+
 }
