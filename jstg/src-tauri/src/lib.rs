@@ -33,6 +33,7 @@ pub fn run() {
             db::get_referral_company_options,
             document_request::request_document,
             util::verify_directory,
+            config_manager::get_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -8,18 +8,18 @@ use crate::Error;
 
 const CONFIG_FILE: &str = "user_config.toml";
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     pub user_config: UserConfig,
     pub advanced: Advanced
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct UserConfig {
     pub document_save_path: String
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct Advanced {
     pub document_api_url: String
 }
@@ -176,4 +176,9 @@ fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, Error> {
     fs::create_dir_all(&jstg_config_dir)?;
     Ok(jstg_config_dir.join(CONFIG_FILE))
 
+}
+
+#[tauri::command]
+pub fn get_config(config: tauri::State<Config>) -> Result<Config, Error> {
+    Ok(config.inner().clone())
 }

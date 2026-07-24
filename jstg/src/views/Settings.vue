@@ -6,12 +6,14 @@
     import { z } from "zod";
     import { invoke } from "@tauri-apps/api/core";
 
+    // form schema
     const { errors, handleSubmit, setFieldError, defineField, setFieldValue } = useForm({
         validationSchema: toTypedSchema(z.object({
             savePath: z.string().trim().min(1),
         }))
     });
 
+    // fields
     const [savePath, savePathAtrb] = defineField("savePath");
 
     const onSubmit = handleSubmit(onSuccess, onInvalidSubmit);
