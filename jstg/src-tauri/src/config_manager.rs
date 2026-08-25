@@ -183,11 +183,11 @@ pub fn get_config(config: tauri::State<Config>) -> Result<Config, Error> {
 }
 
 #[tauri::command]
-pub fn update_config(app_handle: &tauri::AppHandle, config: Config) -> Result<(), Error> {
+pub fn update_config(app_handle: tauri::AppHandle, config: Config) -> Result<(), Error> {
 
         let toml: String = toml::to_string_pretty(&config)?;
 
-        let config_path = get_config_path(app_handle)?;
+        let config_path = get_config_path(&app_handle)?;
 
         // write the config to a new file
         fs::write(&config_path, &toml)?;

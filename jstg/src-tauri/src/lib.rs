@@ -34,6 +34,7 @@ pub fn run() {
             document_request::request_document,
             util::verify_directory,
             config_manager::get_config,
+            config_manager::update_config
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
