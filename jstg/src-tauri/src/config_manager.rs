@@ -8,6 +8,8 @@ use crate::Error;
 
 const CONFIG_FILE: &str = "user_config.toml";
 
+const DEFAULT_API_URL: &str = "http://localhost:5250";
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Config {
     pub user_config: UserConfig,
@@ -157,16 +159,20 @@ fn validate_config(config: &Table) -> ConfigValidation {
 
 }
 
-// TODO: write this super safely
 pub fn recover_config_file(app: &tauri::AppHandle) -> Config {
 
-    // Config {
-    //     document_save_path: "".to_owned()
-    // }
+    // Document dir -> home dir -> current dir fallbacks
+    let documents_path = app.path().document_dir()
+        .or_else(|_| app.path().home_dir())
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|_| ".".to_string());
+
+    // default config
     Config {
-        user_config: UserConfig { document_save_path: "".to_owned() },
-        advanced: Advanced { document_api_url: "".to_owned() }
+        user_config: UserConfig { document_save_path: documents_path },
+        advanced: Advanced { document_api_url: DEFAULT_API_URL.to_string() }
     }
+
 }
 
 fn get_config_path(app: &tauri::AppHandle) -> Result<PathBuf, Error> {
